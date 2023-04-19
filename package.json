@@ -1,0 +1,39 @@
+{
+  "name": "koishi-plugin-jryspro",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "homepage": "https://github.com/twiyin0/koishi-plugin-jryspro.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/twiyin0/koishi-plugin-jryspro.git"
+  },
+  "contributors": [
+    "Twiyin0 <twiyin0@outlook.com>"
+  ],
+  "files": [
+    "lib",
+    "dist"
+  ],
+  "koishi": {
+    "description": {
+      "en": "A jrys plugin with its own night mode and picture",
+      "zh": "一个自带夜间模式和美图的今日运势插件"
+    },
+    "service": {
+      "required": ["database"]
+    }
+  },
+  "license": "MIT",
+  "scripts": {},
+  "keywords": [
+    "chatbot",
+    "koishi",
+    "plugin",
+    "jrys",
+    "今日运势"
+  ],
+  "peerDependencies": {
+    "koishi": "4.12.2"
+  }
+}
