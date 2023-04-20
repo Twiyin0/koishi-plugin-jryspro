@@ -8,18 +8,21 @@ export interface Config {
   interval: number,
   nightStart: number,
   nightEnd: number,
-  imgApi: string
+  imgApi: string,
+  waiting: boolean
 }
 
 export const schema = Schema.object({
   interval: Schema.number().default(30000)
-  .description('指令调用间隔(单位ms)'),
+  .description('指令调用间隔(单位ms)[需要加载数据库]'),
   nightStart: Schema.number().default(19)
   .description('自动夜间模式开启时间整点(24时制),结束时间要小于开始时间[晚上]'),
   nightEnd: Schema.number().default(8)
   .description('自动夜间模式关闭时间整点(24时制),结束时间要小于开始时间[早上]'),
   imgApi: Schema.string().default('https://api.iin0.cn/img/ver')
-  .description('附赠美图的api(推荐纯竖屏),仅支持返回图片的api,不要忘记http(s)://')
+  .description('附赠美图的api(推荐纯竖屏),仅支持返回图片的api,不要忘记http(s)://'),
+  waiting: Schema.boolean().default(true)
+  .description('是否开启发送消息等待提示')
 })
 
 export function apply(ctx: Context, config: Config) {
@@ -86,17 +89,19 @@ export function apply(ctx: Context, config: Config) {
     var dJson = JSON.parse(data.toString());
     if(options.out)
       session.send(<>
-      <p>您的今日运势为</p>
+      <p>{session.username}的今日运势为</p>
       <p>{dJson.data.fortuneSummary}</p>
       <p>{dJson.data.luckyStar}</p>
       <p>{dJson.data.signText}</p>
       <p>仅供娱乐|勿封建迷信|仅供娱乐</p>
-      </>)
-    else
+      </>);
+    else {
+      if(config.waiting)
+        session.send('请稍等,正在查询……');
       session.send(
         <html style={htmlStyle}>
           <div style={leftStyle}>
-            <p>您的今日运势为</p>
+            <p>{session.username}的今日运势为</p>
             <h2>{dJson.data.fortuneSummary}</h2>
             <p>{dJson.data.luckyStar}</p>
             <div style={cardStyle}>
@@ -108,7 +113,8 @@ export function apply(ctx: Context, config: Config) {
           <div style="height:65rem;width: 65%; float: right;box-shadow:0px 0px 15px rgba(0, 0, 0, 0.3);text-align: center;">
             <img style={imgStyle} src={(config.imgApi? config.imgApi:"https://api.iin0.cn/img/ver")}/>
           </div>
-        </html>)
+        </html>);
+    }
     // 释放变量
     options.nonight=daync=null;
   })
