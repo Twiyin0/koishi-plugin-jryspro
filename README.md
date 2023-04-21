@@ -1,10 +1,5 @@
 # koishi-plugin-jryspro
-
-[![npm](https://img.shields.io/npm/v/koishi-plugin-jryspro?style=flat-square)](https://www.npmjs.com/package/koishi-plugin-jryspro)
-
-jrys plugin for bella and it is depended API
-
-## 这里不怎么更新，可以前往github
+贝拉bot的今日运势插件（基于网络api）  
 
 ## 使用方法
 指令： 今日运势  
@@ -12,6 +7,8 @@ jrys plugin for bella and it is depended API
 可选选项：  
  - * -o 纯文本输出，可以提高输出速率  
  - * -n 无视夜间模式输出，可能有群友不太喜欢夜间模式的  
+ - * -t 输出图文，有群友想存图的
+ - * -i 渲染图模式输出，这个是默认的
 
 ## 配置
 interval:   指令调用间隔，得加载数据库才能使用调用间隔，单位是毫秒(ms)  
@@ -32,3 +29,13 @@ imgApi:     图片api地址，仅支持返回图片的api，不支持json等。�
  - 新增等待提示  
  - 将“您”改成群名/用户昵称  
  - 修改必备插件为puppeteer，database为可选。没有puppeteer渲染不了图片，没有database不能限制调用时间。  
+## v1.0.3  
+ - 修改版本兼容,从v4.11.0往上开始兼容  
+## v1.0.4
+ - 新增图文模式，但是图文模式只能使用我的api，如果有需要可以自己copy源码自行修改，进行二次开发(这一版代码写的有点shi, 见谅)
+
+# TIP
+如果没有图片输出可以看看log时不时puppeteer有问题  
+确定puppeteer没问题那就是我服务器寄了，耐心等待  
+4.22后不会再勤奋更新，有事情做喽（瞎说什么呢, 怎么可能跑路！！）  
+有问题就github开issues吧  

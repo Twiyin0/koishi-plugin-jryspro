@@ -9,7 +9,8 @@ export interface Config {
   nightStart: number,
   nightEnd: number,
   imgApi: string,
-  waiting: boolean
+  waiting: boolean,
+  defaultMode: number
 }
 
 export const schema = Schema.object({
@@ -22,7 +23,9 @@ export const schema = Schema.object({
   imgApi: Schema.string().default('https://api.iin0.cn/img/ver')
   .description('附赠美图的api(推荐纯竖屏),仅支持返回图片的api,不要忘记http(s)://'),
   waiting: Schema.boolean().default(true)
-  .description('是否开启发送消息等待提示')
+  .description('是否开启发送消息等待提示'),
+  defaultMode: Schema.number().default(0)
+  .description('选择默认输出模式: 0.图片渲染，1.纯文本，2.图文结合'),
 })
 
 export function apply(ctx: Context, config: Config) {
@@ -30,12 +33,15 @@ export function apply(ctx: Context, config: Config) {
   ctx.command('今日运势',`查看今日运势(${config.nightStart%24}~${config.nightEnd%24}点自动夜间模式)`,{ minInterval: (config.interval?  config.interval:30000) }).alias('jrys')
   .option('out','-o 仅输出纯文本')
   .option('nonight','-n 无视夜间模式输出')
+  .option('txtimg','-t 图文输出')
+  .option('img','-i 渲染输出')
   .action(async ({session,options}) => {
     // 配置文件防失误
-    if(config.nightEnd%24 > config.nightStart%24) {
+    if (config.nightEnd%24 > config.nightStart%24) {
       config.nightStart = 19;
       config.nightEnd = 8;
     }
+    if (config.defaultMode > 2) config.defaultMode = 0;
     // 暂存变量
     var cgColor='';
     var shadowc='';
@@ -87,7 +93,7 @@ export function apply(ctx: Context, config: Config) {
     var apiurl = `https://api.fanlisky.cn/api/qr-fortune/get/${session.userId}`
     const data = await makeRequest(apiurl);
     var dJson = JSON.parse(data.toString());
-    if(options.out)
+    if(options.out || config.defaultMode===1 && (!options.img&&!options.txtimg))
       session.send(<>
       <p>{session.username}的今日运势为</p>
       <p>{dJson.data.fortuneSummary}</p>
@@ -96,24 +102,37 @@ export function apply(ctx: Context, config: Config) {
       <p>仅供娱乐|勿封建迷信|仅供娱乐</p>
       </>);
     else {
-      if(config.waiting)
-        session.send('请稍等,正在查询……');
-      session.send(
-        <html style={htmlStyle}>
-          <div style={leftStyle}>
-            <p>{session.username}的今日运势为</p>
-            <h2>{dJson.data.fortuneSummary}</h2>
-            <p>{dJson.data.luckyStar}</p>
-            <div style={cardStyle}>
-              <p>{dJson.data.signText}</p>
-              <p>{dJson.data.unSignText}</p>
+      if(options.img || config.defaultMode===0 && (!options.out&&!options.txtimg)) {
+        if(config.waiting)
+          session.send('请稍等,正在查询……');
+        session.send(
+          <html style={htmlStyle}>
+            <div style={leftStyle}>
+              <p>{session.username}的今日运势为</p>
+              <h2>{dJson.data.fortuneSummary}</h2>
+              <p>{dJson.data.luckyStar}</p>
+              <div style={cardStyle}>
+                <p>{dJson.data.signText}</p>
+                <p>{dJson.data.unSignText}</p>
+              </div>
+              <p>仅供娱乐| 相信科学，请勿迷信 |仅供娱乐</p>
             </div>
-            <p>仅供娱乐| 相信科学，请勿迷信 |仅供娱乐</p>
-          </div>
-          <div style="height:65rem;width: 65%; float: right;box-shadow:0px 0px 15px rgba(0, 0, 0, 0.3);text-align: center;">
-            <img style={imgStyle} src={(config.imgApi? config.imgApi:"https://api.iin0.cn/img/ver")}/>
-          </div>
-        </html>);
+            <div style="height:65rem;width: 65%; float: right;box-shadow:0px 0px 15px rgba(0, 0, 0, 0.3);text-align: center;">
+              <img style={imgStyle} src={(config.imgApi? config.imgApi:"https://api.iin0.cn/img/ver")}/>
+            </div>
+          </html>);
+      }
+      else {
+        if(config.waiting)
+          session.send('请稍等,正在查询……');
+        session.send(<>
+          <p>{session.username}的今日运势为</p>
+          <p>{dJson.data.fortuneSummary}</p>
+          <p>{dJson.data.luckyStar}</p>
+          <p>{dJson.data.signText}</p>
+          <image url={await getImgUrl('https://api.iin0.cn/img/ver?type=json')}/>
+        </>);
+      }
     }
     // 释放变量
     options.nonight=daync=null;
@@ -128,4 +147,9 @@ async function makeRequest(url) {
        else res(data);
     })
   })
+}
+
+async function getImgUrl(url:String) {
+  var getUrl = await makeRequest(url);
+  return JSON.parse(getUrl.toString()).imgurl
 }
