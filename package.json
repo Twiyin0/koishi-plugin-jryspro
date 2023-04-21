@@ -35,6 +35,6 @@
     "今日运势"
   ],
   "peerDependencies": {
-    "koishi": "4.12.2"
+    "koishi": "^4.12.2"
   }
 }
