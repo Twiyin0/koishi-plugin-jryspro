@@ -32,3 +32,5 @@ imgApi:     图片api地址，仅支持返回图片的api，不支持json等。�
  - 新增等待提示  
  - 将“您”改成群名/用户昵称  
  - 修改必备插件为puppeteer，database为可选。没有puppeteer渲染不了图片，没有database不能限制调用时间。  
+## v1.0.3  
+ - 修改版本兼容,从v4.11.0往上开始兼容  
