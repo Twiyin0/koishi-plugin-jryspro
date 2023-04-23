@@ -12,7 +12,8 @@ export interface Config {
   nightEnd: number,
   imgApi: string,
   waiting: boolean,
-  defaultMode: number
+  defaultMode: number,
+  subimgApi: string
 }
 
 export const schema = Schema.object({
@@ -23,17 +24,19 @@ export const schema = Schema.object({
   nightEnd: Schema.number().default(8)
   .description('自动夜间模式关闭时间整点(24时制),结束时间要小于开始时间[早上]'),
   imgApi: Schema.string().default('https://api.iin0.cn/img/ver')
-  .description('附赠美图的api(推荐纯竖屏),仅支持返回图片的api,不要忘记http(s)://'),
+  .description('渲染模式美图的api(推荐纯竖屏),仅支持返回图片的api,不要忘记http(s)://'),
   waiting: Schema.boolean().default(true)
   .description('是否开启发送消息等待提示'),
   defaultMode: Schema.number().default(0)
   .description('选择默认输出模式: 0.图片渲染，1.纯文本，2.图文结合'),
+  subimgApi: Schema.string().default('https://api.iin0.cn/img/ver')
+  .description('图文模式图片的api,仅支持返回图片的api,不要忘记http(s)://')
 })
 
 
 export function apply(ctx: Context, config: Config) {
   // write your plugin here
-  ctx.command('今日运势',`查看今日运势(${config.nightStart%24}~${config.nightEnd%24}点自动夜间模式)`,{ minInterval: (config.interval?  config.interval:30000) }).alias('jrys')
+  ctx.command('今日运势',`查看今日运势(${config.nightStart%24}~${config.nightEnd%24}点自动夜间模式)`,{ minInterval: (config.interval?  config.interval:30000)}).alias('jrys')
   .option('out','-o 仅输出纯文本')
   .option('nonight','-n 无视夜间模式输出')
   .option('txtimg','-t 图文输出')
@@ -133,6 +136,10 @@ export function apply(ctx: Context, config: Config) {
           </html>);
       }
       else {
+        var suburl = '';
+        var etime = Math.floor(new Date().getTime()/10000);
+        if(config.subimgApi)  suburl=`${config.subimgApi}?v=${etime}`;
+        else  suburl = `https://api.iin0.cn/img/ver?v=${etime}`
         if(config.waiting)
           session.send('请稍等,正在查询……');
         session.send(<>
@@ -140,7 +147,7 @@ export function apply(ctx: Context, config: Config) {
           <p>{dJson.data.fortuneSummary}</p>
           <p>{dJson.data.luckyStar}</p>
           <p>{dJson.data.signText}</p>
-          <image url={await getImgUrl('https://api.iin0.cn/img/ver?type=json')}/>
+          <image url={suburl} />
         </>);
       }
     }
