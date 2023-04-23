@@ -1,6 +1,6 @@
 {
   "name": "koishi-plugin-jryspro",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "homepage": "https://github.com/twiyin0/koishi-plugin-jryspro.git",
@@ -38,5 +38,8 @@
   "peerDependencies": {
     "koishi": "^4.11.0",
     "koishi-plugin-puppeteer": "^3.3.0"
+  },
+  "devDependencies": {
+    "request": "^2.88.2"
   }
 }

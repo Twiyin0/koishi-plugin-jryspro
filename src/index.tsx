@@ -4,6 +4,8 @@ import { } from '@koishijs/plugin-rate-limit'
 
 export const name = 'jryspro'
 
+export const using = ['puppeteer','database']
+
 export interface Config {
   interval: number,
   nightStart: number,
@@ -28,6 +30,7 @@ export const schema = Schema.object({
   .description('选择默认输出模式: 0.图片渲染，1.纯文本，2.图文结合'),
 })
 
+
 export function apply(ctx: Context, config: Config) {
   // write your plugin here
   ctx.command('今日运势',`查看今日运势(${config.nightStart%24}~${config.nightEnd%24}点自动夜间模式)`,{ minInterval: (config.interval?  config.interval:30000) }).alias('jrys')
@@ -35,12 +38,19 @@ export function apply(ctx: Context, config: Config) {
   .option('nonight','-n 无视夜间模式输出')
   .option('txtimg','-t 图文输出')
   .option('img','-i 渲染输出')
+  .userFields(['name'])
   .action(async ({session,options}) => {
     // 配置文件防失误
     if (config.nightEnd%24 > config.nightStart%24) {
       config.nightStart = 19;
       config.nightEnd = 8;
     }
+    // callme修改昵称 支持
+    /** @type {string} */
+    let name: String|undefined;
+    if (ctx.database) name = session.user.name;
+    if (!name) name = session.author.nickname;
+    if (!name) name = session.author.username;
     if (config.defaultMode > 2) config.defaultMode = 0;
     // 暂存变量
     var cgColor='';
@@ -95,7 +105,7 @@ export function apply(ctx: Context, config: Config) {
     var dJson = JSON.parse(data.toString());
     if(options.out || config.defaultMode===1 && (!options.img&&!options.txtimg))
       session.send(<>
-      <p>{session.username}的今日运势为</p>
+      <p>{name}的今日运势为</p>
       <p>{dJson.data.fortuneSummary}</p>
       <p>{dJson.data.luckyStar}</p>
       <p>{dJson.data.signText}</p>
@@ -108,7 +118,7 @@ export function apply(ctx: Context, config: Config) {
         session.send(
           <html style={htmlStyle}>
             <div style={leftStyle}>
-              <p>{session.username}的今日运势为</p>
+              <p>{name}的今日运势为</p>
               <h2>{dJson.data.fortuneSummary}</h2>
               <p>{dJson.data.luckyStar}</p>
               <div style={cardStyle}>
@@ -126,7 +136,7 @@ export function apply(ctx: Context, config: Config) {
         if(config.waiting)
           session.send('请稍等,正在查询……');
         session.send(<>
-          <p>{session.username}的今日运势为</p>
+          <p>{name}的今日运势为</p>
           <p>{dJson.data.fortuneSummary}</p>
           <p>{dJson.data.luckyStar}</p>
           <p>{dJson.data.signText}</p>
