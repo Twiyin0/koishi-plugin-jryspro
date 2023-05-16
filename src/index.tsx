@@ -136,6 +136,7 @@ export function apply(ctx: Context, config: Config) {
           </html>);
       }
       else {
+        // 加一个时间戳来刷新图片
         var suburl = '';
         var etime = Math.floor(new Date().getTime()/10000);
         if(config.subimgApi)  suburl=`${config.subimgApi}?v=${etime}`;
