@@ -4,8 +4,6 @@ import { } from '@koishijs/plugin-rate-limit'
 
 export const name = 'jryspro'
 
-export const using = ['puppeteer','database']
-
 export interface Config {
   interval: number,
   nightStart: number,
@@ -14,6 +12,7 @@ export interface Config {
   waiting: boolean,
   defaultMode: number,
   subimgApi: string
+  fortuneApi: string
 }
 
 export const schema = Schema.object({
@@ -30,7 +29,9 @@ export const schema = Schema.object({
   defaultMode: Schema.number().default(0)
   .description('选择默认输出模式: 0.图片渲染，1.纯文本，2.图文结合'),
   subimgApi: Schema.string().default('https://api.iin0.cn/img/ver')
-  .description('图文模式图片的api,仅支持返回图片的api,不要忘记http(s)://')
+  .description('图文模式图片的api,仅支持返回图片的api,不要忘记http(s)://'),
+  fortuneApi: Schema.string().default('http://act.iin0.cn:3301/')
+  .description('运势的api,(如果需要自检后端可以看我github仓库),记得以/结尾')
 })
 
 
@@ -103,15 +104,16 @@ export function apply(ctx: Context, config: Config) {
       background: `${cgColor}`,
     }
 
-    var apiurl = `https://api.fanlisky.cn/api/qr-fortune/get/${session.userId}`
+    if(config.fortuneApi) var apiurl = `${config.fortuneApi}${session.userId}`
+    else var apiurl = `http://act.iin0.cn:3301/${session.userId}`
     const data = await makeRequest(apiurl);
     var dJson = JSON.parse(data.toString());
     if(options.out || config.defaultMode===1 && (!options.img&&!options.txtimg))
       session.send(<>
       <p>{name}的今日运势为</p>
-      <p>{dJson.data.fortuneSummary}</p>
-      <p>{dJson.data.luckyStar}</p>
-      <p>{dJson.data.signText}</p>
+      <p>{dJson.fortuneSummary}</p>
+      <p>{dJson.luckyStar}</p>
+      <p>{dJson.signText}</p>
       <p>仅供娱乐|勿封建迷信|仅供娱乐</p>
       </>);
     else {
@@ -122,11 +124,11 @@ export function apply(ctx: Context, config: Config) {
           <html style={htmlStyle}>
             <div style={leftStyle}>
               <p>{name}的今日运势为</p>
-              <h2>{dJson.data.fortuneSummary}</h2>
-              <p>{dJson.data.luckyStar}</p>
+              <h2>{dJson.fortuneSummary}</h2>
+              <p>{dJson.luckyStar}</p>
               <div style={cardStyle}>
-                <p>{dJson.data.signText}</p>
-                <p>{dJson.data.unSignText}</p>
+                <p>{dJson.signText}</p>
+                <p>{dJson.unSignText}</p>
               </div>
               <p>仅供娱乐| 相信科学，请勿迷信 |仅供娱乐</p>
             </div>
@@ -136,7 +138,6 @@ export function apply(ctx: Context, config: Config) {
           </html>);
       }
       else {
-        // 加一个时间戳来刷新图片
         var suburl = '';
         var etime = Math.floor(new Date().getTime()/10000);
         if(config.subimgApi)  suburl=`${config.subimgApi}?v=${etime}`;
@@ -145,9 +146,9 @@ export function apply(ctx: Context, config: Config) {
           session.send('请稍等,正在查询……');
         session.send(<>
           <p>{name}的今日运势为</p>
-          <p>{dJson.data.fortuneSummary}</p>
-          <p>{dJson.data.luckyStar}</p>
-          <p>{dJson.data.signText}</p>
+          <p>{dJson.fortuneSummary}</p>
+          <p>{dJson.luckyStar}</p>
+          <p>{dJson.signText}</p>
           <image url={suburl} />
         </>);
       }
@@ -165,9 +166,4 @@ async function makeRequest(url) {
        else res(data);
     })
   })
-}
-
-async function getImgUrl(url:String) {
-  var getUrl = await makeRequest(url);
-  return JSON.parse(getUrl.toString()).imgurl
 }
