@@ -32,26 +32,26 @@ jrys plugin for bella and it is depended API
 
 # History
 ## v1.0.0  
- - 写好了第一版，发布了插件  
+* 写好了第一版，发布了插件  
 ## v1.0.1  
- - 修改了README  
+* 修改了README  
 ## v1.0.2  
- - 新增等待提示  
- - 将“您”改成群名/用户昵称  
- - 修改必备插件为puppeteer，database为可选。没有puppeteer渲染不了图片，没有database不能限制调用时间。  
+* 新增等待提示  
+* 将“您”改成群名/用户昵称  
+* 修改必备插件为puppeteer，database为可选。没有puppeteer渲染不了图片，没有database不能限制调用时间。  
 ## v1.0.3  
- - 修改版本兼容,从v4.11.0往上开始兼容  
+* 修改版本兼容,从v4.11.0往上开始兼容  
 ## v1.0.4
- - 新增图文模式，但是图文模式只能使用我的api，如果有需要可以自己copy源码自行修改，进行二次开发(这一版代码写的有点shi, 见谅)
+* 新增图文模式，但是图文模式只能使用我的api，如果有需要可以自己copy源码自行修改，进行二次开发(这一版代码写的有点shi, 见谅)
 ## v1.0.5
- - 新增callme昵称支持
+* 新增callme昵称支持
 ## v1.0.6
- - 现在可以修改图文模式的图片api了，但跟渲染图一样只能使用返回图片的api。  
+* 现在可以修改图文模式的图片api了，但跟渲染图一样只能使用返回图片的api。  
 > 需要注意的是，api后我加了个v的参数作为时间戳来刷新图片如果您的api有跟v参数冲突的建议换一个api或者二次开发本插件
 
 ## v1.1.0
-    - 后端api寄了，现在可以配置运势源的api，如果我的也寄掉了那么请换成你自建的后端或者用别人的后端  
-    - 新增`fortuneApi`配置  
+* 后端api寄了，现在可以配置运势源的api，如果我的也寄掉了那么请换成你自建的后端或者用别人的后端  
+* 新增`fortuneApi`配置  
 > 运势源api仓库[https://github.com/Twiyin0/jryspro-api](https://github.com/Twiyin0/jryspro-api)
 
 # TIP
