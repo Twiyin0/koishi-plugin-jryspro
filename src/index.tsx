@@ -22,14 +22,16 @@ export const schema = Schema.object({
   .description('自动夜间模式开启时间整点(24时制),结束时间要小于开始时间[晚上]'),
   nightEnd: Schema.number().default(8)
   .description('自动夜间模式关闭时间整点(24时制),结束时间要小于开始时间[早上]'),
-  imgApi: Schema.string().role('link').default('https://api.iin0.cn/img/ver')
+  imgApi: Schema.string().default('https://api.iin0.cn/img/ver')
   .description('渲染模式美图的api(推荐纯竖屏),仅支持返回图片的api,不要忘记http(s)://'),
   waiting: Schema.boolean().default(true)
   .description('是否开启发送消息等待提示'),
   defaultMode: Schema.number().default(0)
   .description('选择默认输出模式: 0.图片渲染，1.纯文本，2.图文结合'),
   subimgApi: Schema.string().default('https://api.iin0.cn/img/ver')
-  .description('图文模式图片的api,仅支持返回图片的api,不要忘记http(s)://')
+  .description('图文模式图片的api,仅支持返回图片的api,不要忘记http(s)://'),
+  fortuneApi: Schema.string().default('http://act.iin0.cn:3301/')
+  .description('运势的api,(如果需要自检后端可以看我github仓库),记得以/结尾')
 })
 
 
