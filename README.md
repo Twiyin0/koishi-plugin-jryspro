@@ -54,6 +54,16 @@ jrys plugin for bella and it is depended API
 * 新增`fortuneApi`配置  
 > 运势源api仓库[https://github.com/Twiyin0/jryspro-api](https://github.com/Twiyin0/jryspro-api)
 
+## v1.1.1
+ - 修改了README
+ - 不小心把csv文件上传了导致包很大
+ - 就是删了点有的没的
+
+## v1.2.0
+ - 据反映大部分用户无法正常请求api，看了下原因是request已弃用，因此导致的问题
+ - 将request替换成内置的axios
+ - 建议所有用户更新至v1.2.0
+
 # TIP
 如果没有图片输出可以看看log时不时puppeteer有问题  
 确定puppeteer没问题那就是我服务器寄了，耐心等待  

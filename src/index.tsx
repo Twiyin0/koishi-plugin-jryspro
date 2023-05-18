@@ -106,7 +106,7 @@ export function apply(ctx: Context, config: Config) {
 
     if(config.fortuneApi) var apiurl = `${config.fortuneApi}${session.userId}`
     else var apiurl = `http://act.iin0.cn:3301/${session.userId}`
-    const data = await makeRequest(apiurl);
+    const data = await ctx.http('get',apiurl);
     var dJson = JSON.parse(data.toString());
     if(options.out || config.defaultMode===1 && (!options.img&&!options.txtimg))
       session.send(<>
@@ -155,15 +155,5 @@ export function apply(ctx: Context, config: Config) {
     }
     // 释放变量
     options.nonight=daync=null;
-  })
-}
-
-async function makeRequest(url) {
-  const opt={url: url}
-  return new Promise((res,rej) => {
-    request.get(opt,(err,rep,data) => {
-       if(err) rej(err);
-       else res(data);
-    })
   })
 }

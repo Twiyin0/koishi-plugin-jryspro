@@ -1,6 +1,6 @@
 {
   "name": "koishi-plugin-jryspro",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "homepage": "https://github.com/twiyin0/koishi-plugin-jryspro.git",
@@ -19,7 +19,7 @@
   "koishi": {
     "description": {
       "en": "A jrys plugin with its own night mode and picture",
-      "zh": "一个自带夜间模式和美图的今日运势插件"
+      "zh": "一个自带夜间模式和美图的今日运势插件,请更新至v1.2.0"
     },
     "service": {
       "required": [
@@ -40,7 +40,7 @@
     "今日运势"
   ],
   "peerDependencies": {
-    "koishi": "^4.11.0",
-    "koishi-plugin-puppeteer": "^3.3.0"
+    "koishi": "^4.12.0",
+    "koishi-plugin-puppeteer": "^3.4.0"
   }
 }
