@@ -1,6 +1,23 @@
-import { Context, Schema } from 'koishi'
+import { Context, Schema, Random } from 'koishi'
+import { } from '@koishijs/plugin-rate-limit'
+import { jrysJson } from './jrys'
+import { pathToFileURL } from 'url'
+import { resolve } from 'path'
+import fs from 'fs'
+import path from 'path'
 
 export const name = 'jryspro'
+
+export const usage = `
+## 使用说明
+> 如果你无法使用此插件，请检查  
+> - 1. (使用命令时无反应，报错等)请检查指令是否有冲突或者是否正确安装puppeteer  
+> - 2. 启用不了插件。请检查koishi版本，puppeteer版本等是否再兼容范围内，或重启koishi，删除此插件依赖再尝试重装
+
+## api说明
+本人的图源api不再向外提供，可以选择随机指定文件夹内的图片。或者其他图源的api（推荐竖屏）  
+imgApi与subimgApi支持本地文件夹绝对路径和http(s)等网络api
+`
 
 export interface Config {
   interval: number,
@@ -8,9 +25,9 @@ export interface Config {
   nightEnd: number,
   imgApi: string,
   waiting: boolean,
+  callme: boolean,
   defaultMode: number,
   subimgApi: string
-  fortuneApi: string
 }
 
 export const schema = Schema.object({
@@ -20,18 +37,17 @@ export const schema = Schema.object({
   .description('自动夜间模式开启时间整点(24时制),结束时间要小于开始时间[晚上]'),
   nightEnd: Schema.number().default(8)
   .description('自动夜间模式关闭时间整点(24时制),结束时间要小于开始时间[早上]'),
-  imgApi: Schema.string().role('link').default('https://api.iin0.cn/img/ver')
-  .description('渲染模式美图的api(推荐纯竖屏),仅支持返回图片的api,不要忘记http(s)://'),
+  imgApi: Schema.string().required()
+  .description('渲染模式美图的api或文件夹(推荐纯竖屏),仅支持返回图片的api,不要忘记http(s)://'),
   waiting: Schema.boolean().default(true)
   .description('是否开启发送消息等待提示'),
+  callme: Schema.boolean().default(false)
+  .description('是否开启callme功能'),
   defaultMode: Schema.number().default(0)
   .description('选择默认输出模式: 0.图片渲染，1.纯文本，2.图文结合'),
-  subimgApi: Schema.string().role('link').default('https://api.iin0.cn/img/ver')
-  .description('图文模式图片的api,仅支持返回图片的api,不要忘记http(s)://'),
-  fortuneApi: Schema.string().role('link').default('http://act.iin0.cn:3301/')
-  .description('运势的api,(如果需要自检后端可以看我github仓库),记得以/结尾')
+  subimgApi: Schema.string().required()
+  .description('图文模式图片的api或文件夹,仅支持返回图片的api,不要忘记http(s)://'),
 })
-
 
 export function apply(ctx: Context, config: Config) {
   // write your plugin here
@@ -50,9 +66,9 @@ export function apply(ctx: Context, config: Config) {
     // callme修改昵称 支持
     /** @type {string} */
     let name: String|undefined;
-    if (ctx.database) name = session.user.name;
-    if (!name) name = session.author.nickname;
-    if (!name) name = session.author.username;
+    if (ctx.database && config.callme) name = session.user.name;
+    if (!name && config.callme) name = session.author.nickname;
+    else name = session.username;
     if (config.defaultMode > 2) config.defaultMode = 0;
     // 暂存变量
     var cgColor='';
@@ -102,10 +118,16 @@ export function apply(ctx: Context, config: Config) {
       background: `${cgColor}`,
     }
 
-    if(config.fortuneApi) var apiurl = `${config.fortuneApi}${session.userId}`
-    else var apiurl = `http://act.iin0.cn:3301/${session.userId}`
-    const data = await ctx.http('get',apiurl);
-    var dJson = JSON.parse(data.toString());
+    // 图片处理
+    let imgurl:any;
+    let subimgurl:any;
+    if(config.imgApi.match(/http(s)?:\/\/(.*)/gi))  imgurl=config.imgApi;
+    else imgurl = pathToFileURL(resolve(__dirname, (config.imgApi + Random.pick(await getFolderImg(config.imgApi))))).href;
+
+    if(config.subimgApi.match(/http(s)?:\/\/(.*)/gi))  subimgurl=config.subimgApi;
+    else subimgurl = pathToFileURL(resolve(__dirname, (config.subimgApi + Random.pick(await getFolderImg(config.subimgApi))))).href;
+
+    var dJson:any = await getJrys(session.userId);
     if(options.out || config.defaultMode===1 && (!options.img&&!options.txtimg))
       session.send(<>
       <p>{name}的今日运势为</p>
@@ -126,32 +148,71 @@ export function apply(ctx: Context, config: Config) {
               <p>{dJson.luckyStar}</p>
               <div style={cardStyle}>
                 <p>{dJson.signText}</p>
-                <p>{dJson.unSignText}</p>
+                <p>{dJson.unsignText}</p>
               </div>
               <p>仅供娱乐| 相信科学，请勿迷信 |仅供娱乐</p>
             </div>
             <div style="height:65rem;width: 65%; float: right;box-shadow:0px 0px 15px rgba(0, 0, 0, 0.3);text-align: center;">
-              <img style={imgStyle} src={(config.imgApi? config.imgApi:"https://api.iin0.cn/img/ver")}/>
+              <img style={imgStyle} src={imgurl}/>
             </div>
           </html>);
       }
       else {
-        var suburl = '';
-        var etime = Math.floor(new Date().getTime()/10000);
-        if(config.subimgApi)  suburl=`${config.subimgApi}?v=${etime}`;
-        else  suburl = `https://api.iin0.cn/img/ver?v=${etime}`
         if(config.waiting)
           session.send('请稍等,正在查询……');
-        session.send(<>
+        try {
+          session.send(<>
           <p>{name}的今日运势为</p>
           <p>{dJson.fortuneSummary}</p>
           <p>{dJson.luckyStar}</p>
           <p>{dJson.signText}</p>
-          <image url={suburl} />
+          <image url={subimgurl} />
         </>);
+        } catch(err) {
+          session.send(
+            <>
+            <p>{name}的今日运势为</p>
+            <p>{dJson.fortuneSummary}</p>
+            <p>{dJson.luckyStar}</p>
+            <p>图片Url: {subimgurl}</p>
+            </>
+          )
+        }
       }
     }
     // 释放变量
     options.nonight=daync=null;
   })
+}
+
+
+async function getJrys(uid: any) {
+  const etime = new Date().setHours(0, 0, 0, 0);
+  return new Promise(resolve => {
+    var todayJrys = (etime/1000 + uid)*2333%(jrysJson.length+1);
+    resolve(jrysJson[todayJrys]);
+  })
+}
+
+async function getFolderImg(folder:String) {
+  let imgfilename = readFilenames(folder);
+  const filteredArr = imgfilename.filter((filename) => {
+    return /\.(png|jpg|jpeg|ico|svg)$/i.test(filename);
+  });
+  return filteredArr;
+}
+
+// 递归获取文件夹内所有文件的文件名
+function readFilenames(dirPath:any) {
+  let filenames = [];
+  const files = fs.readdirSync(dirPath);
+  files.forEach((filename) => {
+    const fullPath = path.join(dirPath, filename);
+    if (fs.statSync(fullPath).isDirectory()) {
+      filenames = filenames.concat(readFilenames(fullPath));
+    } else {
+      filenames.push(filename);
+    }
+  });
+  return filenames;
 }

@@ -64,6 +64,15 @@ jrys plugin for bella and it is depended API
  - 将request替换成内置的axios
  - 建议所有用户更新至v1.2.0
 
+## v1.2.1
+ - 更新了有的没的
+
+## v1.3.0
+ - 运势改为文件，无需再使用运势api
+ - imgApi与subimgApi支持本地文件夹绝对路径,就是说可以随机自己文件夹内的图片了
+ - 7月16后，本人的图源api不再向外提供，请更换为自己的图源api或文件夹绝对路径
+ - 自建的运势api和图源api旧版本仍可以使用
+
 # TIP
 如果没有图片输出可以看看log时不时puppeteer有问题  
 确定puppeteer没问题那就是我服务器寄了，耐心等待  
