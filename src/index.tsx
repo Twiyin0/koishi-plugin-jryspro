@@ -1,6 +1,4 @@
 import { Context, Schema } from 'koishi'
-import request from 'request'
-import { } from '@koishijs/plugin-rate-limit'
 
 export const name = 'jryspro'
 
