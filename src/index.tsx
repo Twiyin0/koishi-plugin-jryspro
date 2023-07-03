@@ -9,6 +9,10 @@ import path from 'path'
 export const name = 'jryspro'
 
 export const usage = `
+## 更新插件前请停止运行插件
+由于v1.2.1到v1.3.0属于大改  
+插件配置项会有改动不停止插件直接更新可能会导致koishi炸掉  
+
 ## 使用说明
 > 如果你无法使用此插件，请检查  
 > - 1. (使用命令时无反应，报错等)请检查指令是否有冲突或者是否正确安装puppeteer  
