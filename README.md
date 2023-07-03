@@ -20,6 +20,7 @@ jrys plugin for bella and it is depended API
 | 配置项           | 参数  | 描述                                                                                                      |
 |---------------|-----|---------------------------------------------------------------------------------------------------------|
 | `interval`    |     | 指令调用间隔，得加载数据库才能使用调用间隔，单位是毫秒(ms)                                                                         |
+| `nightauto`    |     | 是否开启自动夜间模式                                                                         |
 | `nightStart`  |     | 夜间模式开启时间整点(24时制)，一般设置在晚上                                                                                |
 | `nightEnd`    |     | 夜间模式结束时间整点(24时制)，一般设置在早上(需要注意的是，结束时间要小于开启时间，否则启用默认值)                                                    |
 | `imgApi`      |(v1.3.0可用本地文件夹绝对路径)| 图片api地址，仅支持返回图片的api，不支持json等。由于我只制作了竖屏图片适配，建议使用竖屏的图片。在填写时不要把`http(s)://`忘了哦。                            |
@@ -54,7 +55,6 @@ jrys plugin for bella and it is depended API
 * 后端api寄了，现在可以配置运势源的api，如果我的也寄掉了那么请换成你自建的后端或者用别人的后端  
 * 新增`fortuneApi`配置  
 > 运势源api仓库[https://github.com/Twiyin0/jryspro-api](https://github.com/Twiyin0/jryspro-api)
-
 ## v1.1.1
  - 修改了README
  - 不小心把csv文件上传了导致包很大
@@ -64,7 +64,6 @@ jrys plugin for bella and it is depended API
  - 据反映大部分用户无法正常请求api，看了下原因是request已弃用，因此导致的问题
  - 将request替换成内置的axios
  - 建议所有用户更新至v1.2.0
-
 ## v1.2.1
  - 更新了有的没的
 
@@ -73,10 +72,13 @@ jrys plugin for bella and it is depended API
 插件配置项会有改动不停止插件直接更新可能会导致koishi炸掉  
 
 ## v1.3.0
+### 此版本改了配置文件，请更新时停止该插件并删除该插件在配置文件中的配置项!!
  - 运势改为文件，无需再使用运势api
  - imgApi与subimgApi支持本地文件夹绝对路径,就是说可以随机自己文件夹内的图片了
  - 7月16后，本人的图源api不再向外提供，请更换为自己的图源api或文件夹绝对路径
  - 自建的运势api和图源api旧版本仍可以使用
+## v1.3.1
+ - 增加了启用/禁用自动夜间模式开关
 
 ## v1.3.1
 新增“更新前请停止插件的警告”复制你的koishi炸掉

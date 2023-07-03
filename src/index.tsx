@@ -37,6 +37,8 @@ export interface Config {
 export const schema = Schema.object({
   interval: Schema.number().default(30000)
   .description('指令调用间隔(单位ms)[需要加载数据库]'),
+  nightauto: Schema.boolean().default(true)
+  .description('是否开启自动夜间模式'),
   nightStart: Schema.number().default(19)
   .description('自动夜间模式开启时间整点(24时制),结束时间要小于开始时间[晚上]'),
   nightEnd: Schema.number().default(8)
@@ -47,7 +49,7 @@ export const schema = Schema.object({
   .description('是否开启发送消息等待提示'),
   callme: Schema.boolean().default(false)
   .description('是否开启callme功能'),
-  defaultMode: Schema.number().default(0)
+  defaultMode: Schema.union(['0', '1', '2']).default(0)
   .description('选择默认输出模式: 0.图片渲染，1.纯文本，2.图文结合'),
   subimgApi: Schema.string().required()
   .description('图文模式图片的api或文件夹,仅支持返回图片的api,不要忘记http(s)://'),
@@ -80,7 +82,7 @@ export function apply(ctx: Context, config: Config) {
     var lightcg='';
     // 硬核的夜间模式
     var daync = new Date();
-    if((config.nightEnd?  config.nightEnd:8)<=daync.getHours() && daync.getHours()<(config.nightStart?  config.nightStart:19) || options.nonight) {
+    if((config.nightEnd?  config.nightEnd:8)<=daync.getHours() && daync.getHours()<(config.nightStart?  config.nightStart:19) || options.nonight || config.nightauto) {
       cgColor = 'rgba(255, 255, 255, 0.6)';
       shadowc = '0px 0px 15px rgba(0, 0, 0, 0.3)';
       lightcg = 'brightness(100%)';
