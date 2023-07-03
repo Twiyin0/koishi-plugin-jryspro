@@ -3,6 +3,9 @@
 [![npm](https://img.shields.io/npm/v/koishi-plugin-jryspro?style=flat-square)](https://www.npmjs.com/package/koishi-plugin-jryspro)
 
 jrys plugin for bella and it is depended API
+## 更新插件前请停止运行插件
+由于v1.2.1到v1.3.0属于大改  
+插件配置项会有改动不停止插件直接更新可能会导致koishi炸掉  
 
 ## 使用方法
 指令： 今日运势  
@@ -65,11 +68,18 @@ jrys plugin for bella and it is depended API
 ## v1.2.1
  - 更新了有的没的
 
+## 更新插件前请停止运行插件
+由于v1.2.1到v1.3.0属于大改  
+插件配置项会有改动不停止插件直接更新可能会导致koishi炸掉  
+
 ## v1.3.0
  - 运势改为文件，无需再使用运势api
  - imgApi与subimgApi支持本地文件夹绝对路径,就是说可以随机自己文件夹内的图片了
  - 7月16后，本人的图源api不再向外提供，请更换为自己的图源api或文件夹绝对路径
  - 自建的运势api和图源api旧版本仍可以使用
+
+## v1.3.1
+新增“更新前请停止插件的警告”复制你的koishi炸掉
 
 # TIP
 如果没有图片输出可以看看log时不时puppeteer有问题  
