@@ -82,15 +82,20 @@ export function apply(ctx: Context, config: Config) {
     var lightcg='';
     // 硬核的夜间模式
     var daync = new Date();
-    if((config.nightEnd?  config.nightEnd:8)<=daync.getHours() && daync.getHours()<(config.nightStart?  config.nightStart:19) || options.nonight || config.nightauto) {
+    if (config.nightauto) {
+      if((config.nightEnd?  config.nightEnd:8)<=daync.getHours() && daync.getHours()<(config.nightStart?  config.nightStart:19) || options.nonight) {
+          cgColor = 'rgba(255, 255, 255, 0.6)';
+          shadowc = '0px 0px 15px rgba(0, 0, 0, 0.3)';
+          lightcg = 'brightness(100%)';
+      } else {
+        cgColor = 'rgba(105, 105, 105, 0.6)';
+        shadowc = '0px 0px 15px rgba(255, 255, 255, 0.3)';
+        lightcg = 'brightness(50%)';
+      }
+    } else {
       cgColor = 'rgba(255, 255, 255, 0.6)';
       shadowc = '0px 0px 15px rgba(0, 0, 0, 0.3)';
       lightcg = 'brightness(100%)';
-    }
-    else {
-      cgColor = 'rgba(105, 105, 105, 0.6)';
-      shadowc = '0px 0px 15px rgba(255, 255, 255, 0.3)';
-      lightcg = 'brightness(50%)';
     }
     // 设置style
     const htmlStyle = {
