@@ -3,9 +3,10 @@
 [![npm](https://img.shields.io/npm/v/koishi-plugin-jryspro?style=flat-square)](https://www.npmjs.com/package/koishi-plugin-jryspro)
 
 jrys plugin for bella and it is depended API
-## 更新插件前请停止运行插件
-由于v1.2.1到v1.3.0属于大改  
-插件配置项会有改动不停止插件直接更新可能会导致koishi炸掉  
+## 注意
+* 更新前请看更新日志，也许有些版本你并不需要更新  
+* 如果需要将v1.2.x更新到v1.3.x请先停止本插件再更新，以免koishi炸掉  
+* v1.3.3(非重要更新)  如果你的图源api地址不支持?random参数，请不要更新此插件  
 
 ## 使用方法
 指令： 今日运势  
