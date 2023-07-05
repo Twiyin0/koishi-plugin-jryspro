@@ -4,7 +4,7 @@
 
 jrys plugin for bella and it is depended API
 ## 注意
-* 更新前请看更新日志，也许有些版本你并不需要更新  
+* 更新前请看[更新日志](https://raw.githubusercontent.com/Twiyin0/koishi-plugin-jryspro/main/CHANGELOG.md)，也许有些版本你并不需要更新  
 * 如果需要将v1.2.x更新到v1.3.x请先停止本插件再更新，以免koishi炸掉  
 * v1.3.3(非重要更新)  如果你的图源api地址不支持?random参数，请不要更新此插件  
 
