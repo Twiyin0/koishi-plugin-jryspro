@@ -25,6 +25,7 @@ imgApi与subimgApi支持本地文件夹绝对路径和http(s)等网络api
 
 export interface Config {
   interval: number,
+  nightauto: boolean,
   nightStart: number,
   nightEnd: number,
   imgApi: string,
@@ -49,7 +50,7 @@ export const schema = Schema.object({
   .description('是否开启发送消息等待提示'),
   callme: Schema.boolean().default(false)
   .description('是否开启callme功能'),
-  defaultMode: Schema.union(['0', '1', '2']).default(0)
+  defaultMode: Schema.union([0, 1, 2]).default(0)
   .description('选择默认输出模式: 0.图片渲染，1.纯文本，2.图文结合'),
   subimgApi: Schema.string().required()
   .description('图文模式图片的api或文件夹,仅支持返回图片的api,不要忘记http(s)://'),
@@ -132,10 +133,11 @@ export function apply(ctx: Context, config: Config) {
     // 图片处理
     let imgurl:any;
     let subimgurl:any;
-    if(config.imgApi.match(/http(s)?:\/\/(.*)/gi))  imgurl=config.imgApi;
+    let etime = (new Date().getTime())%25565;
+    if(config.imgApi.match(/http(s)?:\/\/(.*)/gi))  imgurl=config.imgApi+'?'+etime.toString();
     else imgurl = pathToFileURL(resolve(__dirname, (config.imgApi + Random.pick(await getFolderImg(config.imgApi))))).href;
 
-    if(config.subimgApi.match(/http(s)?:\/\/(.*)/gi))  subimgurl=config.subimgApi;
+    if(config.subimgApi.match(/http(s)?:\/\/(.*)/gi))  subimgurl=config.subimgApi+'?'+etime.toString();
     else subimgurl = pathToFileURL(resolve(__dirname, (config.subimgApi + Random.pick(await getFolderImg(config.subimgApi))))).href;
 
     var dJson:any = await getJrys(session.userId);
