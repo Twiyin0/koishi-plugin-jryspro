@@ -17,6 +17,7 @@
     "dist"
   ],
   "koishi": {
+    "browser": true,
     "description": {
       "en": "A jrys plugin with its own night mode and picture(Stop this plugin when you upgrade it)",
       "zh": "一个自带夜间模式和美图的今日运势插件(更新前请停止插件)"
