@@ -17,6 +17,14 @@ jrys plugin for bella and it is depended API
 * -t 输出图文，有群友想存图的
 * -i 渲染图模式输出，这个是默认的
 
+> 如果你无法使用此插件，请检查  
+> - 1. (使用命令时无反应，报错等)请检查指令是否有冲突或者是否正确安装puppeteer  
+> - 2. 提示“发生未知错误”可能是没有获取到群友的uid，需要在数据库内刷新一下
+> - 3. “数据出错”之类的提示不是本插件的提示，可能你装了其他插件
+> - 4. 启用不了插件。请检查koishi版本，puppeteer版本等是否再兼容范围内，或重启koishi，删除此插件依赖再尝试重装
+
+随机文件夹内图片时请注意路径\`C:user/path/to/\`不要把后面的/忘了   
+
 ## 配置
 | 配置项           | 参数  | 描述                                                                                                      |
 |---------------|-----|---------------------------------------------------------------------------------------------------------|
@@ -36,6 +44,14 @@ jrys plugin for bella and it is depended API
 # CHANGELOG
 
 [更新日志](https://raw.githubusercontent.com/Twiyin0/koishi-plugin-jryspro/main/CHANGELOG.md)
+
+## api说明
+* api url以 #e# 结尾可以在末尾添加更新时间戳(例子后面等价的数字为当前时间戳)  
+* 例: https://api.example.com/img?#e#  ==等价于== https://api.example.com/img?271878  
+* 例: https://api.example.com/img?type=acc&v=#e#  ==等价于== https://api.example.com/img?type=acc&v=271878  
+
+本人的图源api不再向外提供，可以选择随机指定文件夹内的图片。或者其他图源的api（推荐竖屏）  
+imgApi与subimgApi支持本地文件夹绝对路径和http(s)等网络api  
 
 # TIP
 如果没有图片输出可以看看log时不时puppeteer有问题  

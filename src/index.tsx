@@ -10,17 +10,25 @@ export const name = 'jryspro'
 
 export const usage = `
 ## 更新插件前请停止运行插件
-由于v1.2.1到v1.3.0属于大改  
-插件配置项会有改动不停止插件直接更新可能会导致koishi炸掉  
+插件配置项可能会有改动，不停止插件直接更新可能会导致koishi炸掉  
 
 ## 使用说明
+
 > 如果你无法使用此插件，请检查  
 > - 1. (使用命令时无反应，报错等)请检查指令是否有冲突或者是否正确安装puppeteer  
-> - 2. 启用不了插件。请检查koishi版本，puppeteer版本等是否再兼容范围内，或重启koishi，删除此插件依赖再尝试重装
+> - 2. 提示“发生未知错误”可能是没有获取到群友的uid，需要在数据库内刷新一下
+> - 3. “数据出错”之类的提示不是本插件的提示，可能你装了其他插件
+> - 4. 启用不了插件。请检查koishi版本，puppeteer版本等是否再兼容范围内，或重启koishi，删除此插件依赖再尝试重装
+
+随机文件夹内图片时请注意路径\`C:user/path/to/\`不要把后面的/忘了   
 
 ## api说明
+* api url以 #e# 结尾可以在末尾添加更新时间戳(例子后面等价的数字为当前时间戳)  
+* 例: https://api.example.com/img?#e#  ==等价于== https://api.example.com/img?271878  
+* 例: https://api.example.com/img?type=acc&v=#e#  ==等价于== https://api.example.com/img?type=acc&v=271878  
+
 本人的图源api不再向外提供，可以选择随机指定文件夹内的图片。或者其他图源的api（推荐竖屏）  
-imgApi与subimgApi支持本地文件夹绝对路径和http(s)等网络api
+imgApi与subimgApi支持本地文件夹绝对路径和http(s)等网络api  
 `
 
 export interface Config {
@@ -56,6 +64,7 @@ export const schema = Schema.object({
   .description('图文模式图片的api或文件夹,仅支持返回图片的api,不要忘记http(s)://'),
 })
 
+export const using = ['puppeteer']
 export function apply(ctx: Context, config: Config) {
   // write your plugin here
   ctx.command('今日运势',`查看今日运势(${config.nightStart%24}~${config.nightEnd%24}点自动夜间模式)`,{ minInterval: (config.interval?  config.interval:30000)}).alias('jrys')
@@ -134,10 +143,10 @@ export function apply(ctx: Context, config: Config) {
     let imgurl:any;
     let subimgurl:any;
     let etime = (new Date().getTime())%25565;
-    if(config.imgApi.match(/http(s)?:\/\/(.*)/gi))  imgurl=config.imgApi+'?'+etime.toString();
+    if(config.imgApi.match(/http(s)?:\/\/(.*)/gi))  imgurl=(config.imgApi.match(/^http(s)?:\/\/(.*)#e#$/gi))? config.imgApi.replace('#e#',etime.toString()) : config.imgApi;
     else imgurl = pathToFileURL(resolve(__dirname, (config.imgApi + Random.pick(await getFolderImg(config.imgApi))))).href;
 
-    if(config.subimgApi.match(/http(s)?:\/\/(.*)/gi))  subimgurl=config.subimgApi+'?'+etime.toString();
+    if(config.subimgApi.match(/http(s)?:\/\/(.*)/gi))  subimgurl= (config.subimgApi.match(/^http(s)?:\/\/(.*)#e#$/gi))? config.subimgApi.replace('#e#',etime.toString()) : config.subimgApi;
     else subimgurl = pathToFileURL(resolve(__dirname, (config.subimgApi + Random.pick(await getFolderImg(config.subimgApi))))).href;
 
     var dJson:any = await getJrys(session.userId);
