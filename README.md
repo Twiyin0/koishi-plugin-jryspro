@@ -55,6 +55,5 @@ imgApi与subimgApi支持本地文件夹绝对路径和http(s)等网络api
 
 # TIP
 如果没有图片输出可以看看log时不时puppeteer有问题  
-确定puppeteer没问题那就是我服务器寄了，耐心等待  
-4.22后不会再勤奋更新，有事情做喽（瞎说什么呢, 怎么可能跑路！！）  
+确定puppeteer没问题那就是api寄了或者本地路径没填对，别把最后面的/省了  
 有问题就github开issues吧  

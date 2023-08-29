@@ -149,21 +149,21 @@ export function apply(ctx: Context, config: Config) {
     if(config.subimgApi.match(/http(s)?:\/\/(.*)/gi))  subimgurl= (config.subimgApi.match(/^http(s)?:\/\/(.*)#e#$/gi))? config.subimgApi.replace('#e#',etime.toString()) : config.subimgApi;
     else subimgurl = pathToFileURL(resolve(__dirname, (config.subimgApi + Random.pick(await getFolderImg(config.subimgApi))))).href;
 
-    var dJson:any = await getJrys(session.userId);
+    var dJson:any = (session.userId)? await getJrys(Number(session.userId)):0;
+    if (!dJson.type) return <>无法获取用户ID，请联系管理员</>
     if(options.out || config.defaultMode===1 && (!options.img&&!options.txtimg))
-      session.send(<>
+      return <>
       <p>{name}的今日运势为</p>
       <p>{dJson.fortuneSummary}</p>
       <p>{dJson.luckyStar}</p>
       <p>{dJson.signText}</p>
       <p>仅供娱乐|勿封建迷信|仅供娱乐</p>
-      </>);
+      </>
     else {
       if(options.img || config.defaultMode===0 && (!options.out&&!options.txtimg)) {
         if(config.waiting)
           session.send('请稍等,正在查询……');
-        session.send(
-          <html style={htmlStyle}>
+        return <html style={htmlStyle}>
             <div style={leftStyle}>
               <p>{name}的今日运势为</p>
               <h2>{dJson.fortuneSummary}</h2>
@@ -177,28 +177,27 @@ export function apply(ctx: Context, config: Config) {
             <div style="height:65rem;width: 65%; float: right;box-shadow:0px 0px 15px rgba(0, 0, 0, 0.3);text-align: center;">
               <img style={imgStyle} src={imgurl}/>
             </div>
-          </html>);
+          </html>
       }
       else {
         if(config.waiting)
           session.send('请稍等,正在查询……');
         try {
-          session.send(<>
+          return <>
           <p>{name}的今日运势为</p>
           <p>{dJson.fortuneSummary}</p>
           <p>{dJson.luckyStar}</p>
           <p>{dJson.signText}</p>
           <image url={subimgurl} />
-        </>);
+        </>
         } catch(err) {
-          session.send(
+          return
             <>
             <p>{name}的今日运势为</p>
             <p>{dJson.fortuneSummary}</p>
             <p>{dJson.luckyStar}</p>
             <p>图片Url: {subimgurl}</p>
             </>
-          )
         }
       }
     }
@@ -206,7 +205,6 @@ export function apply(ctx: Context, config: Config) {
     options.nonight=daync=null;
   })
 }
-
 
 async function getJrys(uid: any) {
   const etime = new Date().setHours(0, 0, 0, 0);
