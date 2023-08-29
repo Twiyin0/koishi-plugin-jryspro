@@ -150,7 +150,7 @@ export function apply(ctx: Context, config: Config) {
     else subimgurl = pathToFileURL(resolve(__dirname, (config.subimgApi + Random.pick(await getFolderImg(config.subimgApi))))).href;
 
     var dJson:any = (session.userId)? await getJrys(Number(session.userId)):0;
-    if (!dJson.type) return <>无法获取用户ID，请联系管理员</>
+    if (dJson.type==0) return <>无法获取用户ID，请联系管理员</>
     if(options.out || config.defaultMode===1 && (!options.img&&!options.txtimg))
       return <>
       <p>{name}的今日运势为</p>
