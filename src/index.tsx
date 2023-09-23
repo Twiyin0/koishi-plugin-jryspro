@@ -1,10 +1,11 @@
-import { Context, Schema, Random } from 'koishi'
+import { Context, Schema, Random, Session, Logger } from 'koishi'
 import { } from '@koishijs/plugin-rate-limit'
 import { jrysJson } from './jrys'
 import { pathToFileURL } from 'url'
 import { resolve } from 'path'
 import fs from 'fs'
 import path from 'path'
+import crypto from 'crypto'
 
 export const name = 'jryspro'
 
@@ -149,8 +150,8 @@ export function apply(ctx: Context, config: Config) {
     if(config.subimgApi.match(/http(s)?:\/\/(.*)/gi))  subimgurl= (config.subimgApi.match(/^http(s)?:\/\/(.*)#e#$/gi))? config.subimgApi.replace('#e#',etime.toString()) : config.subimgApi;
     else subimgurl = pathToFileURL(resolve(__dirname, (config.subimgApi + Random.pick(await getFolderImg(config.subimgApi))))).href;
 
-    var dJson:any = (session.userId)? await getJrys(Number(session.userId)):0;
-    if (dJson.type==0) return <>无法获取用户ID，请联系管理员</>
+    var dJson:any = await getJrys(session);
+    // if (dJson == 0) return <>{session.userId}&gt;{session.username}无法获取用户ID, 请联系管理员</>
     if(options.out || config.defaultMode===1 && (!options.img&&!options.txtimg))
       return <>
       <p>{name}的今日运势为</p>
@@ -191,8 +192,7 @@ export function apply(ctx: Context, config: Config) {
           <image url={subimgurl} />
         </>
         } catch(err) {
-          return
-            <>
+          return <>
             <p>{name}的今日运势为</p>
             <p>{dJson.fortuneSummary}</p>
             <p>{dJson.luckyStar}</p>
@@ -201,15 +201,24 @@ export function apply(ctx: Context, config: Config) {
         }
       }
     }
-    // 释放变量
-    options.nonight=daync=null;
   })
 }
 
-async function getJrys(uid: any) {
+const md5 = crypto.createHash('md5');
+
+async function getJrys(session:Session) {
   const etime = new Date().setHours(0, 0, 0, 0);
+  let userId:any;
+  if (!isNaN(Number(session.userId))) {
+    userId = session.userId;
+  } else {
+    md5.update(session.username);
+    let hexDigest = md5.digest('hex');
+    let encryptedString = parseInt(hexDigest.substring(0, 10), 16);
+    userId = encryptedString;
+  }
   return new Promise(resolve => {
-    var todayJrys = (etime/1000 + uid)*2333%(jrysJson.length+1);
+    var todayJrys = (etime/1000 + userId)*2333%(jrysJson.length+1);
     resolve(jrysJson[todayJrys]);
   })
 }
