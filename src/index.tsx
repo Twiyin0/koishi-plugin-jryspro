@@ -1,5 +1,5 @@
-import { Context, Schema, Random, Session, Logger } from 'koishi'
-import { } from '@koishijs/plugin-rate-limit'
+import { Context, Schema, Random, Session } from 'koishi'
+import { } from "koishi-plugin-rate-limit"
 import { jrysJson } from './jrys'
 import { pathToFileURL } from 'url'
 import { resolve } from 'path'
@@ -28,7 +28,6 @@ export const usage = `
 * 例: https://api.example.com/img?#e#  ==等价于== https://api.example.com/img?271878  
 * 例: https://api.example.com/img?type=acc&v=#e#  ==等价于== https://api.example.com/img?type=acc&v=271878  
 
-本人的图源api不再向外提供，可以选择随机指定文件夹内的图片。或者其他图源的api（推荐竖屏）  
 imgApi与subimgApi支持本地文件夹绝对路径和http(s)等网络api  
 `
 
@@ -53,7 +52,7 @@ export const schema = Schema.object({
   .description('自动夜间模式开启时间整点(24时制),结束时间要小于开始时间[晚上]'),
   nightEnd: Schema.number().default(8)
   .description('自动夜间模式关闭时间整点(24时制),结束时间要小于开始时间[早上]'),
-  imgApi: Schema.string().required()
+  imgApi: Schema.string().role('link')
   .description('渲染模式美图的api或文件夹(推荐纯竖屏),仅支持返回图片的api,不要忘记http(s)://'),
   waiting: Schema.boolean().default(true)
   .description('是否开启发送消息等待提示'),
@@ -61,150 +60,152 @@ export const schema = Schema.object({
   .description('是否开启callme功能'),
   defaultMode: Schema.union([0, 1, 2]).default(0)
   .description('选择默认输出模式: 0.图片渲染，1.纯文本，2.图文结合'),
-  subimgApi: Schema.string().required()
+  subimgApi: Schema.string().role('link')
   .description('图文模式图片的api或文件夹,仅支持返回图片的api,不要忘记http(s)://'),
 })
 
 export const using = ['puppeteer']
+
 export function apply(ctx: Context, config: Config) {
   // write your plugin here
-  ctx.command('今日运势',`查看今日运势(${config.nightStart%24}~${config.nightEnd%24}点自动夜间模式)`,{ minInterval: (config.interval?  config.interval:30000)}).alias('jrys')
+  ctx.command('jryspro',`查看今日运势(${config.nightStart%24}~${config.nightEnd%24}点自动夜间模式)`,{ minInterval: (config.interval?  config.interval:30000)}).alias('jrys').alias("今日运势")
   .option('out','-o 仅输出纯文本')
   .option('nonight','-n 无视夜间模式输出')
   .option('txtimg','-t 图文输出')
   .option('img','-i 渲染输出')
   .userFields(['name'])
   .action(async ({session,options}) => {
-    // 配置文件防失误
-    if (config.nightEnd%24 > config.nightStart%24) {
-      config.nightStart = 19;
-      config.nightEnd = 8;
-    }
-    // callme修改昵称 支持
-    /** @type {string} */
-    let name: String|undefined;
-    if (ctx.database && config.callme) name = session.user.name;
-    if (!name && config.callme) name = session.author.nickname;
-    else name = session.username;
-    if (config.defaultMode > 2) config.defaultMode = 0;
-    // 暂存变量
-    var cgColor='';
-    var shadowc='';
-    var lightcg='';
-    // 硬核的夜间模式
-    var daync = new Date();
-    if (config.nightauto) {
-      if((config.nightEnd?  config.nightEnd:8)<=daync.getHours() && daync.getHours()<(config.nightStart?  config.nightStart:19) || options.nonight) {
+        // 配置文件防失误
+        if (config.nightEnd%24 > config.nightStart%24) {
+          config.nightStart = 19;
+          config.nightEnd = 8;
+        }
+        // callme修改昵称 支持
+        /** @type {string} */
+        let name: String|undefined;
+        if (ctx.database && config.callme) name = session.user.name;
+        if (!name && config.callme) name = session.author.name;
+        else name = session.username;
+        if (config.defaultMode > 2) config.defaultMode = 0;
+        // 暂存变量
+        var cgColor='';
+        var shadowc='';
+        var lightcg='';
+        // 硬核的夜间模式
+        var daync = new Date();
+        if (config.nightauto) {
+          if((config.nightEnd?  config.nightEnd:8)<=daync.getHours() && daync.getHours()<(config.nightStart?  config.nightStart:19) || options.nonight) {
+              cgColor = 'rgba(255, 255, 255, 0.6)';
+              shadowc = '0px 0px 15px rgba(0, 0, 0, 0.3)';
+              lightcg = 'brightness(100%)';
+          } else {
+            cgColor = 'rgba(105, 105, 105, 0.6)';
+            shadowc = '0px 0px 15px rgba(255, 255, 255, 0.3)';
+            lightcg = 'brightness(50%)';
+          }
+        } else {
           cgColor = 'rgba(255, 255, 255, 0.6)';
           shadowc = '0px 0px 15px rgba(0, 0, 0, 0.3)';
           lightcg = 'brightness(100%)';
-      } else {
-        cgColor = 'rgba(105, 105, 105, 0.6)';
-        shadowc = '0px 0px 15px rgba(255, 255, 255, 0.3)';
-        lightcg = 'brightness(50%)';
-      }
-    } else {
-      cgColor = 'rgba(255, 255, 255, 0.6)';
-      shadowc = '0px 0px 15px rgba(0, 0, 0, 0.3)';
-      lightcg = 'brightness(100%)';
-    }
-    // 设置style
-    const htmlStyle = {
-      background: `${cgColor}`
-    }
-    const cardStyle = {
-      margin: '0 auto',
-      padding: '12px 12px',
-      height: '49rem',
-      'max-width': '980px',
-      'max-height': '1024px',
-      background: `${cgColor}`,
-      'border-radius': '15px',
-      'backdrop-filter': `blur(3px)`,
-      'box-shadow': `${shadowc}`,
-      'writing-mode': 'vertical-rl',
-      'text-orientation': 'mixed'
-    }
-    const imgStyle = {
-      height: '100%',
-      filter: `${lightcg}`,
-      'overflow': 'hidden',
-      'display': 'inline-block',
-      'vertical-align': 'middle'
-    }
-    const leftStyle = {
-      width: '35%',
-      height: '65rem',
-      'float': 'left',
-      'text-align': 'center',
-      background: `${cgColor}`,
-    }
-
-    // 图片处理
-    let imgurl:any;
-    let subimgurl:any;
-    let etime = (new Date().getTime())%25565;
-    if(config.imgApi.match(/http(s)?:\/\/(.*)/gi))  imgurl=(config.imgApi.match(/^http(s)?:\/\/(.*)#e#$/gi))? config.imgApi.replace('#e#',etime.toString()) : config.imgApi;
-    else imgurl = pathToFileURL(resolve(__dirname, (config.imgApi + Random.pick(await getFolderImg(config.imgApi))))).href;
-
-    if(config.subimgApi.match(/http(s)?:\/\/(.*)/gi))  subimgurl= (config.subimgApi.match(/^http(s)?:\/\/(.*)#e#$/gi))? config.subimgApi.replace('#e#',etime.toString()) : config.subimgApi;
-    else subimgurl = pathToFileURL(resolve(__dirname, (config.subimgApi + Random.pick(await getFolderImg(config.subimgApi))))).href;
-
-    var dJson:any = await getJrys(session);
-    // if (dJson == 0) return <>{session.userId}&gt;{session.username}无法获取用户ID, 请联系管理员</>
-    if(options.out || config.defaultMode===1 && (!options.img&&!options.txtimg))
-      return <>
-      <p>{name}的今日运势为</p>
-      <p>{dJson.fortuneSummary}</p>
-      <p>{dJson.luckyStar}</p>
-      <p>{dJson.signText}</p>
-      <p>仅供娱乐|勿封建迷信|仅供娱乐</p>
-      </>
-    else {
-      if(options.img || config.defaultMode===0 && (!options.out&&!options.txtimg)) {
-        if(config.waiting)
-          session.send('请稍等,正在查询……');
-        return <html style={htmlStyle}>
-            <div style={leftStyle}>
-              <p>{name}的今日运势为</p>
-              <h2>{dJson.fortuneSummary}</h2>
-              <p>{dJson.luckyStar}</p>
-              <div style={cardStyle}>
-                <p>{dJson.signText}</p>
-                <p>{dJson.unsignText}</p>
-              </div>
-              <p>仅供娱乐| 相信科学，请勿迷信 |仅供娱乐</p>
-            </div>
-            <div style="height:65rem;width: 65%; float: right;box-shadow:0px 0px 15px rgba(0, 0, 0, 0.3);text-align: center;">
-              <img style={imgStyle} src={imgurl}/>
-            </div>
-          </html>
-      }
-      else {
-        if(config.waiting)
-          session.send('请稍等,正在查询……');
-        try {
+        }
+        // 设置style
+        const htmlStyle = {
+          background: `${cgColor}`
+        }
+        const cardStyle = {
+          margin: '0 auto',
+          padding: '12px 12px',
+          height: '49rem',
+          'max-width': '980px',
+          'max-height': '1024px',
+          background: `${cgColor}`,
+          'border-radius': '15px',
+          'backdrop-filter': `blur(3px)`,
+          'box-shadow': `${shadowc}`,
+          'writing-mode': 'vertical-rl',
+          'text-orientation': 'mixed'
+        }
+        const imgStyle = {
+          height: '100%',
+          filter: `${lightcg}`,
+          'overflow': 'hidden',
+          'display': 'inline-block',
+          'vertical-align': 'middle'
+        }
+        const leftStyle = {
+          width: '35%',
+          height: '65rem',
+          'float': 'left',
+          'text-align': 'center',
+          background: `${cgColor}`,
+        }
+    
+        // 图片处理
+        let imgurl:any;
+        let subimgurl:any;
+        let etime = (new Date().getTime())%25565;
+        if(config.imgApi.match(/http(s)?:\/\/(.*)/gi))  imgurl=(config.imgApi.match(/^http(s)?:\/\/(.*)#e#$/gi))? config.imgApi.replace('#e#',etime.toString()) : config.imgApi;
+        else imgurl = pathToFileURL(resolve(__dirname, (config.imgApi + Random.pick(await getFolderImg(config.imgApi))))).href;
+    
+        if(config.subimgApi.match(/http(s)?:\/\/(.*)/gi))  subimgurl= (config.subimgApi.match(/^http(s)?:\/\/(.*)#e#$/gi))? config.subimgApi.replace('#e#',etime.toString()) : config.subimgApi;
+        else subimgurl = pathToFileURL(resolve(__dirname, (config.subimgApi + Random.pick(await getFolderImg(config.subimgApi))))).href;
+    
+        var dJson:any = await getJrys(session);
+        // if (dJson == 0) return <>{session.userId}&gt;{session.username}无法获取用户ID, 请联系管理员</>
+        if(options.out || config.defaultMode===1 && (!options.img&&!options.txtimg))
           return <>
           <p>{name}的今日运势为</p>
           <p>{dJson.fortuneSummary}</p>
           <p>{dJson.luckyStar}</p>
           <p>{dJson.signText}</p>
-          <image url={subimgurl} />
-        </>
-        } catch(err) {
-          return <>
-            <p>{name}的今日运势为</p>
-            <p>{dJson.fortuneSummary}</p>
-            <p>{dJson.luckyStar}</p>
-            <p>图片Url: {subimgurl}</p>
+          <p>仅供娱乐|勿封建迷信|仅供娱乐</p>
+          </>
+        else {
+          if(options.img || config.defaultMode===0 && (!options.out&&!options.txtimg)) {
+            if(config.waiting)
+              session.send('请稍等,正在查询……');
+            return <html style={htmlStyle}>
+                <div style={leftStyle}>
+                  <p>{name}的今日运势为</p>
+                  <h2>{dJson.fortuneSummary}</h2>
+                  <p>{dJson.luckyStar}</p>
+                  <div style={cardStyle}>
+                    <p>{dJson.signText}</p>
+                    <p>{dJson.unsignText}</p>
+                  </div>
+                  <p>仅供娱乐| 相信科学，请勿迷信 |仅供娱乐</p>
+                </div>
+                <div style="height:65rem;width: 65%; float: right;box-shadow:0px 0px 15px rgba(0, 0, 0, 0.3);text-align: center;">
+                  <image style={imgStyle} src={imgurl}/>
+                </div>
+              </html>
+          }
+          else {
+            if(config.waiting)
+              session.send('请稍等,正在查询……');
+            try {
+              return <>
+              <p>{name}的今日运势为</p>
+              <p>{dJson.fortuneSummary}</p>
+              <p>{dJson.luckyStar}</p>
+              <p>{dJson.signText}</p>
+              <image url={subimgurl} />
             </>
+            } catch(err) {
+              return <>
+                <p>{name}的今日运势为</p>
+                <p>{dJson.fortuneSummary}</p>
+                <p>{dJson.luckyStar}</p>
+                <p>图片Url: {subimgurl}</p>
+                </>
+            }
+          }
         }
-      }
-    }
   })
 }
 
 const md5 = crypto.createHash('md5');
+const hash = crypto.createHash('sha256');
 
 async function getJrys(session:Session) {
   const etime = new Date().setHours(0, 0, 0, 0);
@@ -212,10 +213,13 @@ async function getJrys(session:Session) {
   if (!isNaN(Number(session.userId))) {
     userId = session.userId;
   } else {
+    hash.update(session.userId);
     md5.update(session.username);
     let hexDigest = md5.digest('hex');
+    const hashhexDigest = hash.digest('hex');
+    const decimalNumber = parseInt(hashhexDigest, 16);
     let encryptedString = parseInt(hexDigest.substring(0, 10), 16);
-    userId = encryptedString;
+    userId = Number(encryptedString+decimalNumber)%1000000001;
   }
   return new Promise(resolve => {
     var todayJrys = (etime/1000 + userId)*2333%(jrysJson.length+1);
