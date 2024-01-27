@@ -204,10 +204,9 @@ export function apply(ctx: Context, config: Config) {
   })
 }
 
-const md5 = crypto.createHash('md5');
-const hash = crypto.createHash('sha256');
-
 async function getJrys(session:Session) {
+  const md5 = crypto.createHash('md5');
+  const hash = crypto.createHash('sha256');
   const etime = new Date().setHours(0, 0, 0, 0);
   let userId:any;
   if (!isNaN(Number(session.userId))) {
