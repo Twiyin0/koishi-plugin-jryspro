@@ -213,13 +213,16 @@ async function getJrys(session:Session) {
   if (!isNaN(Number(session.userId))) {
     userId = session.userId;
   } else {
-    hash.update(session.userId);
-    md5.update(session.username);
-    let hexDigest = md5.digest('hex');
-    const hashhexDigest = hash.digest('hex');
-    const decimalNumber = parseInt(hashhexDigest, 16);
-    let encryptedString = parseInt(hexDigest.substring(0, 10), 16);
-    userId = Number(encryptedString+decimalNumber)%1000000001;
+    if (session.userId) {
+      hash.update(session.userId);
+      let hashhexDigest = hash.digest('hex');
+      userId = Number(parseInt(hashhexDigest, 16)) % 1000000001;
+    }
+    else {
+      md5.update(session.username);
+      let hexDigest = md5.digest('hex');
+      userId = parseInt(hexDigest, 16) % 1000000001;
+    }
   }
   return new Promise(resolve => {
     var todayJrys = (etime/1000 + userId)*2333%(jrysJson.length+1);
