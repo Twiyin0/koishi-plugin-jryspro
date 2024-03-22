@@ -151,7 +151,7 @@ export function apply(ctx: Context, config: Config) {
         else subimgurl = pathToFileURL(resolve(__dirname, (config.subimgApi + Random.pick(await getFolderImg(config.subimgApi))))).href;
     
         var dJson:any = await getJrys(session);
-        // if (dJson == 0) return <>{session.userId}&gt;{session.username}无法获取用户ID, 请联系管理员</>
+        // if (dJson == 0) return <>{session.event.user.id}&gt;{session.username}无法获取用户ID, 请联系管理员</>
         if(options.out || config.defaultMode===1 && (!options.img&&!options.txtimg))
           return <>
           <p>{name}的今日运势为</p>
@@ -209,22 +209,22 @@ async function getJrys(session:Session) {
   const hash = crypto.createHash('sha256');
   const etime = new Date().setHours(0, 0, 0, 0);
   let userId:any;
-  if (!isNaN(Number(session.userId))) {
-    userId = session.userId;
+  if (!isNaN(Number(session.event.user.id))) {
+    userId = session.event.user.id;
   } else {
-    if (session.userId) {
-      hash.update(session.userId);
+    if (session.event.user.id) {
+      hash.update(session.event.user.id+String(etime));
       let hashhexDigest = hash.digest('hex');
       userId = Number(parseInt(hashhexDigest, 16)) % 1000000001;
     }
     else {
-      md5.update(session.username);
+      md5.update(session.username+String(etime));
       let hexDigest = md5.digest('hex');
       userId = parseInt(hexDigest, 16) % 1000000001;
     }
   }
   return new Promise(resolve => {
-    var todayJrys = (etime/1000 + userId)*2333%(jrysJson.length+1);
+    var todayJrys = (etime%100000 + userId? userId: 2333)*2333%(jrysJson.length+1);
     resolve(jrysJson[todayJrys]);
   })
 }
