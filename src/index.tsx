@@ -208,6 +208,7 @@ async function getJrys(session:Session) {
   const md5 = crypto.createHash('md5');
   const hash = crypto.createHash('sha256');
   const etime = new Date().setHours(0, 0, 0, 0);
+  // const etime = new Date().getTime();
   let userId:any;
   if (!isNaN(Number(session.event.user.id))) {
     userId = session.event.user.id;
@@ -224,7 +225,7 @@ async function getJrys(session:Session) {
     }
   }
   return new Promise(resolve => {
-    var todayJrys = (etime%100000 + userId? userId: 2333)*2333%(jrysJson.length+1);
+    var todayJrys = (etime*userId%1000001)*2333%(jrysJson.length+1);
     resolve(jrysJson[todayJrys]);
   })
 }
