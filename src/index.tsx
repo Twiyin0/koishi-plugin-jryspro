@@ -225,7 +225,7 @@ async function getJrys(session:Session) {
     }
   }
   return new Promise(resolve => {
-    var todayJrys = (etime*userId%1000001)*2333%(jrysJson.length+1);
+    var todayJrys = ((etime*userId%1000001)*2333)%(jrysJson.length);
     resolve(jrysJson[todayJrys]);
   })
 }
