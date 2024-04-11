@@ -73,6 +73,7 @@ export function apply(ctx: Context, config: Config) {
   .option('nonight','-n 无视夜间模式输出')
   .option('txtimg','-t 图文输出')
   .option('img','-i 渲染输出')
+  .option('debug','-d 调试')
   .userFields(['name'])
   .action(async ({session,options}) => {
         // 配置文件防失误
@@ -93,6 +94,11 @@ export function apply(ctx: Context, config: Config) {
         var lightcg='';
         // 硬核的夜间模式
         var daync = new Date();
+
+        if (options.debug) {
+          return <>{await getJrys(session, true)}</>
+        }
+
         if (config.nightauto) {
           if((config.nightEnd?  config.nightEnd:8)<=daync.getHours() && daync.getHours()<(config.nightStart?  config.nightStart:19) || options.nonight) {
               cgColor = 'rgba(255, 255, 255, 0.6)';
@@ -204,10 +210,10 @@ export function apply(ctx: Context, config: Config) {
   })
 }
 
-async function getJrys(session:Session) {
+async function getJrys(session:Session, debug?: boolean) {
   const md5 = crypto.createHash('md5');
   const hash = crypto.createHash('sha256');
-  const etime = new Date().setHours(0, 0, 0, 0);
+  var etime = new Date().setHours(0, 0, 0, 0);
   // const etime = new Date().getTime();
   let userId:any;
   if (!isNaN(Number(session.event.user.id))) {
@@ -225,8 +231,11 @@ async function getJrys(session:Session) {
     }
   }
   return new Promise(resolve => {
-    var todayJrys = ((etime*userId%1000001)*2333)%(jrysJson.length);
-    resolve(jrysJson[todayJrys]);
+    var todayJrys = (((etime/100000)*userId%1000001)*2333)%(jrysJson.length);
+    if(debug)
+      resolve(`Jrys Debugger: jrysNumber:${todayJrys}, etime: ${etime/100000}`);
+    else 
+      resolve(jrysJson[todayJrys]);
   })
 }
 
