@@ -1,6 +1,7 @@
 # Logs
 /node_modules
 /lib
+/src/index.html
 logs
 *.log
 npm-debug.log*

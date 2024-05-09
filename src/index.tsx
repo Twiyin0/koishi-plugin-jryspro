@@ -1,8 +1,10 @@
-import { Context, Schema, Random, Session } from 'koishi'
+import { Context, Schema, Random, Session, h } from 'koishi'
 import { } from "koishi-plugin-rate-limit"
 import { jrysJson } from './jrys'
 import { pathToFileURL } from 'url'
 import { resolve } from 'path'
+import {} from "koishi-plugin-puppeteer";
+import { Page } from "puppeteer-core";
 import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
@@ -58,13 +60,13 @@ export const schema = Schema.object({
   .description('是否开启发送消息等待提示'),
   callme: Schema.boolean().default(false)
   .description('是否开启callme功能'),
-  defaultMode: Schema.union([0, 1, 2]).default(0)
+  defaultMode: Schema.union([0, 1, 2, 3]).default(2)
   .description('选择默认输出模式: 0.图片渲染，1.纯文本，2.图文结合'),
   subimgApi: Schema.string().role('link')
   .description('图文模式图片的api或文件夹,仅支持返回图片的api,不要忘记http(s)://'),
 })
 
-export const using = ['puppeteer']
+export const using = ['puppeteer', 'database']
 
 export function apply(ctx: Context, config: Config) {
   // write your plugin here
@@ -74,6 +76,7 @@ export function apply(ctx: Context, config: Config) {
   .option('txtimg','-t 图文输出')
   .option('img','-i 渲染输出')
   .option('debug','-d 调试')
+  .option('new', '-N 新版输出')
   .userFields(['name'])
   .action(async ({session,options}) => {
         // 配置文件防失误
@@ -84,8 +87,8 @@ export function apply(ctx: Context, config: Config) {
         // callme修改昵称 支持
         /** @type {string} */
         let name: String|undefined;
-        if (ctx.database && config.callme) name = session.user.name;
-        if (!name && config.callme) name = session.author.name;
+        if (ctx.database && config.callme) name = session.user.name? session.user.name:session.username;
+        if (!name && config.callme) name = session.author.name? session.author.name:session.username;
         else name = session.username;
         if (config.defaultMode > 2) config.defaultMode = 0;
         // 暂存变量
@@ -145,7 +148,6 @@ export function apply(ctx: Context, config: Config) {
           'text-align': 'center',
           background: `${cgColor}`,
         }
-    
         // 图片处理
         let imgurl:any;
         let subimgurl:any;
@@ -153,9 +155,11 @@ export function apply(ctx: Context, config: Config) {
         if(config.imgApi.match(/http(s)?:\/\/(.*)/gi))  imgurl=(config.imgApi.match(/^http(s)?:\/\/(.*)#e#$/gi))? config.imgApi.replace('#e#',etime.toString()) : config.imgApi;
         else imgurl = pathToFileURL(resolve(__dirname, (config.imgApi + Random.pick(await getFolderImg(config.imgApi))))).href;
     
-        if(config.subimgApi.match(/http(s)?:\/\/(.*)/gi))  subimgurl= (config.subimgApi.match(/^http(s)?:\/\/(.*)#e#$/gi))? config.subimgApi.replace('#e#',etime.toString()) : config.subimgApi;
-        else subimgurl = pathToFileURL(resolve(__dirname, (config.subimgApi + Random.pick(await getFolderImg(config.subimgApi))))).href;
-    
+        if (config.subimgApi) {
+          if(config.subimgApi.match(/http(s)?:\/\/(.*)/gi))  subimgurl= (config.subimgApi.match(/^http(s)?:\/\/(.*)#e#$/gi))? config.subimgApi.replace('#e#',etime.toString()) : config.subimgApi;
+          else subimgurl = pathToFileURL(resolve(__dirname, (config.subimgApi + Random.pick(await getFolderImg(config.subimgApi))))).href;
+        }
+
         var dJson:any = await getJrys(session);
         // if (dJson == 0) return <>{session.event.user.id}&gt;{session.username}无法获取用户ID, 请联系管理员</>
         if(options.out || config.defaultMode===1 && (!options.img&&!options.txtimg))
@@ -166,6 +170,37 @@ export function apply(ctx: Context, config: Config) {
           <p>{dJson.signText}</p>
           <p>仅供娱乐|勿封建迷信|仅供娱乐</p>
           </>
+        else if (options.new || config.defaultMode===2 && (!options.out&&!options.txtimg)) {
+          let jrysRender = {
+            "username": name,
+            "star": `${dJson.fortuneSummary}&nbsp;&nbsp;${dJson.luckyStar}`,
+            "sign": `${dJson.signText.split("，")[0]}，${dJson.signText.split("，")[1]}<br/>${dJson.signText.split("，")[2]}，${dJson.signText.split("，")[3]}`,
+            "avatarUrl": session.author.avatar,
+            "night": lightcg
+          }
+          if(config.waiting)
+            session.send('请稍等,正在查询……');
+          let page: Page;
+          try {
+            await replaceBackgroundImage(imgurl);
+            page = await ctx.puppeteer.page();
+            await page.setViewport({ width: 1920 * 2, height: 1080 * 2 });
+            await page.goto(`file:///${resolve(__dirname, "./index.html")}`);
+            await page.waitForNetworkIdle();
+            await page.evaluate(`render(${JSON.stringify(jrysRender)})`);
+            const element = await page.$("#body");
+            return (
+              h.image(await element.screenshot({
+                encoding: "binary"
+              }), "image/png")
+            );
+          } catch (err) {
+            console.log("[jryspro Debugger]>>\n"+err);
+            return <>渲染失败，不知道发生了啥</>
+          } finally {
+            page?.close();
+          }
+        }
         else {
           if(options.img || config.defaultMode===0 && (!options.out&&!options.txtimg)) {
             if(config.waiting)
@@ -195,14 +230,14 @@ export function apply(ctx: Context, config: Config) {
               <p>{dJson.fortuneSummary}</p>
               <p>{dJson.luckyStar}</p>
               <p>{dJson.signText}</p>
-              <image url={subimgurl} />
+              <image url={subimgurl? subimgurl:imgurl} />
             </>
             } catch(err) {
               return <>
                 <p>{name}的今日运势为</p>
                 <p>{dJson.fortuneSummary}</p>
                 <p>{dJson.luckyStar}</p>
-                <p>图片Url: {subimgurl}</p>
+                <p>图片Url: {subimgurl? subimgurl:imgurl}</p>
                 </>
             }
           }
@@ -260,4 +295,20 @@ function readFilenames(dirPath:any) {
     }
   });
   return filenames;
+}
+
+// 异步函数来读取和写入文件
+async function replaceBackgroundImage(imgUrl: string) {
+  try {
+    // 读取 index.html 文件的内容
+    const data = await fs.promises.readFile(resolve(__dirname, "./template.html"), 'utf8');
+
+    // 替换字符串中的 ##backgroundImage## 为指定的图片 URL
+    const replacedContent = data.replace('##backgroundImage##', imgUrl);
+
+    // 将替换后的内容写入新文件中
+    await fs.promises.writeFile(resolve(__dirname, "./index.html"), replacedContent, 'utf8');
+  } catch (err) {
+    console.error('Error:', err);
+  }
 }
