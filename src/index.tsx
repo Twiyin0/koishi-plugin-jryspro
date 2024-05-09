@@ -110,7 +110,7 @@ export function apply(ctx: Context, config: Config) {
           } else {
             cgColor = 'rgba(105, 105, 105, 0.6)';
             shadowc = '0px 0px 15px rgba(255, 255, 255, 0.3)';
-            lightcg = 'brightness(50%)';
+            lightcg = 'brightness(65%)';
           }
         } else {
           cgColor = 'rgba(255, 255, 255, 0.6)';
@@ -170,7 +170,7 @@ export function apply(ctx: Context, config: Config) {
           <p>{dJson.signText}</p>
           <p>仅供娱乐|勿封建迷信|仅供娱乐</p>
           </>
-        else if (options.new || config.defaultMode===2 && (!options.out&&!options.txtimg)) {
+        else if (options.new || config.defaultMode===2 && (!options.out&&!options.txtimg&&!options.img)) {
           let jrysRender = {
             "username": name,
             "star": `${dJson.fortuneSummary}&nbsp;&nbsp;${dJson.luckyStar}`,
@@ -202,7 +202,7 @@ export function apply(ctx: Context, config: Config) {
           }
         }
         else {
-          if(options.img || config.defaultMode===0 && (!options.out&&!options.txtimg)) {
+          if(options.img || config.defaultMode===0 && (!options.out&&!options.txtimg&&!options.new)) {
             if(config.waiting)
               session.send('请稍等,正在查询……');
             return <html style={htmlStyle}>
