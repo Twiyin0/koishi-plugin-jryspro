@@ -1,6 +1,6 @@
 {
   "name": "koishi-plugin-jryspro",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "homepage": "https://github.com/twiyin0/koishi-plugin-jryspro.git",

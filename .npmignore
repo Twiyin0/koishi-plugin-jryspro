@@ -1,3 +1,4 @@
 .DS_Store
 tsconfig.tsbuildinfo
 src/index.html
+*index.html
