@@ -18,6 +18,6 @@ function render(jrysInfo) {
     sign.innerHTML = jrysInfo.sign;
 
     // bgUrl.style.backgroundImage = `url("${jrysInfo.bgUrl}")`;
-    avatarUrl.src = jrysInfo.avatarUrl;
+    // avatarUrl.src = jrysInfo.avatarUrl;
     bgUrl.style.filter = `${jrysInfo.night}`;
 }

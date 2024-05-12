@@ -167,3 +167,10 @@
 * 背景图采用竖屏imgurl
 * subimgurl改为可选，不用配置subimgApi也能用jryspro了
 
+## v2.0.2
+## 修复
+* 修复了使用.evaluate()函数超时的问题，但是源码内注释保留，为今后做UI渲染提供思路()
+
+## 修改
+* 修改了一点小细节
+* 注：头像获取不到可能是适配器问题，采用koishi官方API ———— session.author.avatar 来获取的头像

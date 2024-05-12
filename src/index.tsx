@@ -42,7 +42,8 @@ export interface Config {
   waiting: boolean,
   callme: boolean,
   defaultMode: number,
-  subimgApi: string
+  subimgApi: string,
+  avatarUrl: string
 }
 
 export const schema = Schema.object({
@@ -61,9 +62,11 @@ export const schema = Schema.object({
   callme: Schema.boolean().default(false)
   .description('是否开启callme功能'),
   defaultMode: Schema.union([0, 1, 2, 3]).default(2)
-  .description('选择默认输出模式: 0.图片渲染，1.纯文本，2.图文结合'),
+  .description('选择默认输出模式: 0.图片渲染，1.纯文本，2.新版竖屏，3.图文结合'),
   subimgApi: Schema.string().role('link')
   .description('图文模式图片的api或文件夹,仅支持返回图片的api,不要忘记http(s)://'),
+  avatarUrl: Schema.string().role('link')
+  .description("默认头像URL(https?://或者file://)")
 })
 
 export const using = ['puppeteer', 'database']
@@ -171,23 +174,23 @@ export function apply(ctx: Context, config: Config) {
           <p>仅供娱乐|勿封建迷信|仅供娱乐</p>
           </>
         else if (options.new || config.defaultMode===2 && (!options.out&&!options.txtimg&&!options.img)) {
-          let jrysRender = {
-            "username": name,
-            "star": `${dJson.fortuneSummary}&nbsp;&nbsp;${dJson.luckyStar}`,
-            "sign": `${dJson.signText.split("，")[0]}，${dJson.signText.split("，")[1]}<br/>${dJson.signText.split("，")[2]}，${dJson.signText.split("，")[3]}`,
-            "avatarUrl": session.author.avatar,
-            "night": lightcg
-          }
+          // let jrysRender = {
+          //   "username": name,
+          //   "star": `${dJson.fortuneSummary}&nbsp;&nbsp;${dJson.luckyStar}`,
+          //   "sign": `${dJson.signText.split("，")[0]}，${dJson.signText.split("，")[1]}<br/>${dJson.signText.split("，")[2]}，${dJson.signText.split("，")[3]}`,
+          //   // "avatarUrl": session.author.avatar,
+          //   "night": lightcg
+          // }
           if(config.waiting)
             session.send('请稍等,正在查询……');
           let page: Page;
           try {
-            await replaceBackgroundImage(imgurl);
+            await replaceBackgroundImage(imgurl, name, session.author.avatar? session.author.avatar: config.avatarUrl, dJson );
             page = await ctx.puppeteer.page();
             await page.setViewport({ width: 1920 * 2, height: 1080 * 2 });
             await page.goto(`file:///${resolve(__dirname, "./index.html")}`);
             await page.waitForNetworkIdle();
-            await page.evaluate(`render(${JSON.stringify(jrysRender)})`);
+            // await page.evaluate(`render(${JSON.stringify(jrysRender)})`);    // 某些人使用这个函数会渲染超时
             const element = await page.$("#body");
             return (
               h.image(await element.screenshot({
@@ -298,13 +301,17 @@ function readFilenames(dirPath:any) {
 }
 
 // 异步函数来读取和写入文件
-async function replaceBackgroundImage(imgUrl: string) {
+async function replaceBackgroundImage(imgUrl: string, name:any, avatar:any, jrysJson: any) {
   try {
     // 读取 index.html 文件的内容
     const data = await fs.promises.readFile(resolve(__dirname, "./template.html"), 'utf8');
 
+    let signTxt = `${jrysJson.signText.split("，")[0]}，${jrysJson.signText.split("，")[1]}<br/>${jrysJson.signText.split("，")[2]}，${jrysJson.signText.split("，")[3]}`;
+
     // 替换字符串中的 ##backgroundImage## 为指定的图片 URL
-    const replacedContent = data.replace('##backgroundImage##', imgUrl);
+    const replacedContent = data.replace('##backgroundImage##', imgUrl).replace('##avatar##', avatar)
+    .replace("##username##", name).replace("##fortunate##", `${jrysJson.fortuneSummary}&nbsp;&nbsp;&nbsp;&nbsp;${jrysJson.luckyStar}`)
+    .replace("##signTxt##", signTxt);
 
     // 将替换后的内容写入新文件中
     await fs.promises.writeFile(resolve(__dirname, "./index.html"), replacedContent, 'utf8');
