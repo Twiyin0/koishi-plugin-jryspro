@@ -43,7 +43,8 @@ export interface Config {
   callme: boolean,
   defaultMode: number,
   subimgApi: string,
-  avatarUrl: string
+  avatarUrl: string,
+  adapterqqID: string,
 }
 
 export const schema = Schema.object({
@@ -55,8 +56,8 @@ export const schema = Schema.object({
   .description('自动夜间模式开启时间整点(24时制),结束时间要小于开始时间[晚上]'),
   nightEnd: Schema.number().default(8)
   .description('自动夜间模式关闭时间整点(24时制),结束时间要小于开始时间[早上]'),
-  imgApi: Schema.string().role('link')
-  .description('渲染模式美图的api或文件夹(推荐纯竖屏),仅支持返回图片的api,不要忘记http(s)://'),
+  imgApi: Schema.string().role('link').required()
+  .description('[必填]渲染模式美图的api或文件夹(推荐纯竖屏),仅支持返回图片的api,不要忘记http(s)://'),
   waiting: Schema.boolean().default(true)
   .description('是否开启发送消息等待提示'),
   callme: Schema.boolean().default(false)
@@ -66,10 +67,11 @@ export const schema = Schema.object({
   subimgApi: Schema.string().role('link')
   .description('图文模式图片的api或文件夹,仅支持返回图片的api,不要忘记http(s)://'),
   avatarUrl: Schema.string().role('link')
-  .description("默认头像URL(https?://或者file://)")
+  .description("默认头像URL(https?://或者file://)"),
+  adapterqqID: Schema.string().description("用于适配adapter-qq，在此输入botid")
 })
 
-export const using = ['puppeteer', 'database']
+export const inject = ['puppeteer', 'database']
 
 export function apply(ctx: Context, config: Config) {
   // write your plugin here
@@ -185,23 +187,23 @@ export function apply(ctx: Context, config: Config) {
             session.send('请稍等,正在查询……');
           let page: Page;
           try {
-            await replaceBackgroundImage(imgurl, name, session.author.avatar? session.author.avatar: config.avatarUrl, dJson );
+            let avatarUrl = session.platform == 'qq'? `https://q.qlogo.cn/qqapp/${config.adapterqqID}/${session.event.user.id}/640` : session.author.avatar? session.author.avatar: config.avatarUrl;
+            await replaceBackgroundImage(imgurl, name, avatarUrl, dJson );
             page = await ctx.puppeteer.page();
             await page.setViewport({ width: 1920 * 2, height: 1080 * 2 });
             await page.goto(`file:///${resolve(__dirname, "./index.html")}`);
             await page.waitForNetworkIdle();
             // await page.evaluate(`render(${JSON.stringify(jrysRender)})`);    // 某些人使用这个函数会渲染超时
             const element = await page.$("#body");
-            return (
+            session.send (
               h.image(await element.screenshot({
                 encoding: "binary"
               }), "image/png")
             );
+            await page.close();
           } catch (err) {
             console.log("[jryspro Debugger]>>\n"+err);
             return <>渲染失败，不知道发生了啥</>
-          } finally {
-            page?.close();
           }
         }
         else {
@@ -302,20 +304,23 @@ function readFilenames(dirPath:any) {
 
 // 异步函数来读取和写入文件
 async function replaceBackgroundImage(imgUrl: string, name:any, avatar:any, jrysJson: any) {
-  try {
-    // 读取 index.html 文件的内容
-    const data = await fs.promises.readFile(resolve(__dirname, "./template.html"), 'utf8');
-
-    let signTxt = `${jrysJson.signText.split("，")[0]}，${jrysJson.signText.split("，")[1]}<br/>${jrysJson.signText.split("，")[2]}，${jrysJson.signText.split("，")[3]}`;
-
-    // 替换字符串中的 ##backgroundImage## 为指定的图片 URL
-    const replacedContent = data.replace('##backgroundImage##', imgUrl).replace('##avatar##', avatar)
-    .replace("##username##", name).replace("##fortunate##", `${jrysJson.fortuneSummary}&nbsp;&nbsp;&nbsp;&nbsp;${jrysJson.luckyStar}`)
-    .replace("##signTxt##", signTxt);
-
-    // 将替换后的内容写入新文件中
-    await fs.promises.writeFile(resolve(__dirname, "./index.html"), replacedContent, 'utf8');
-  } catch (err) {
-    console.error('Error:', err);
-  }
+  return new Promise(async res => {
+    try {
+      // 读取 index.html 文件的内容
+      const data = await fs.promises.readFile(resolve(__dirname, "./template.html"), 'utf8');
+  
+      let signTxt = `${jrysJson.signText.split("，")[0]}，${jrysJson.signText.split("，")[1]}<br/>${jrysJson.signText.split("，")[2]}，${jrysJson.signText.split("，")[3]}`;
+  
+      // 替换字符串中的 ##backgroundImage## 为指定的图片 URL
+      const replacedContent = data.replace('##backgroundImage##', imgUrl).replace('##avatar##', avatar)
+      .replace("##username##", name).replace("##fortunate##", `${jrysJson.fortuneSummary}&nbsp;&nbsp;&nbsp;&nbsp;${jrysJson.luckyStar}`)
+      .replace("##signTxt##", signTxt);
+  
+      // 将替换后的内容写入新文件中
+      await fs.promises.writeFile(resolve(__dirname, "./index.html"), replacedContent, 'utf8');
+      res(true);
+    } catch (err) {
+      console.error('Error:', err);
+    }
+  })
 }
