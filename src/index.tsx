@@ -192,7 +192,7 @@ export function apply(ctx: Context, config: Config) {
             page = await ctx.puppeteer.page();
             await page.setViewport({ width: 1920 * 2, height: 1080 * 2 });
             await page.goto(`file:///${resolve(__dirname, "./index.html")}`);
-            await page.waitForNetworkIdle();
+            await page.waitForSelector("#avatar");
             // await page.evaluate(`render(${JSON.stringify(jrysRender)})`);    // 某些人使用这个函数会渲染超时
             const element = await page.$("#body");
             session.send (
@@ -313,7 +313,7 @@ async function replaceBackgroundImage(imgUrl: string, name:any, avatar:any, jrys
   
       // 替换字符串中的 ##backgroundImage## 为指定的图片 URL
       const replacedContent = data.replace('##backgroundImage##', imgUrl).replace('##avatar##', avatar)
-      .replace("##username##", name).replace("##fortunate##", `${jrysJson.fortuneSummary}&nbsp;&nbsp;&nbsp;&nbsp;${jrysJson.luckyStar}`)
+      .replace("##username##", name).replace("##fortunate##", `${jrysJson.fortuneSummary}&nbsp;&nbsp;${jrysJson.luckyStar}`)
       .replace("##signTxt##", signTxt);
   
       // 将替换后的内容写入新文件中
