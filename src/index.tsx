@@ -192,7 +192,7 @@ export function apply(ctx: Context, config: Config) {
             page = await ctx.puppeteer.page();
             await page.setViewport({ width: 1920 * 2, height: 1080 * 2 });
             await page.goto(`file:///${resolve(__dirname, "./index.html")}`);
-            await page.waitForSelector("#avatar");
+            // await page.waitForSelector("#avatar");
             // await page.evaluate(`render(${JSON.stringify(jrysRender)})`);    // 某些人使用这个函数会渲染超时
             const element = await page.$("#body");
             session.send (
