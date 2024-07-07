@@ -1,4 +1,4 @@
-import { Context, Schema, Random, Session, h } from 'koishi'
+import { Context, Schema, Random, Session, h, Logger } from 'koishi'
 import { } from "koishi-plugin-rate-limit"
 import { jrysJson } from './jrys'
 import { pathToFileURL } from 'url'
@@ -10,6 +10,8 @@ import path from 'path'
 import crypto from 'crypto'
 
 export const name = 'jryspro'
+
+const logger = new Logger(name)
 
 export const usage = `
 ## 更新插件前请停止运行插件
@@ -44,7 +46,6 @@ export interface Config {
   defaultMode: number,
   subimgApi: string,
   avatarUrl: string,
-  adapterqqID: string,
 }
 
 export const schema = Schema.object({
@@ -68,7 +69,6 @@ export const schema = Schema.object({
   .description('图文模式图片的api或文件夹,仅支持返回图片的api,不要忘记http(s)://'),
   avatarUrl: Schema.string().role('link')
   .description("默认头像URL(https?://或者file://)"),
-  adapterqqID: Schema.string().description("用于适配adapter-qq，在此输入botid")
 })
 
 export const inject = ['puppeteer', 'database']
@@ -187,23 +187,24 @@ export function apply(ctx: Context, config: Config) {
             session.send('请稍等,正在查询……');
           let page: Page;
           try {
-            let avatarUrl = session.platform == 'qq'? `https://q.qlogo.cn/qqapp/${config.adapterqqID}/${session.event.user.id}/640` : session.author.avatar? session.author.avatar: config.avatarUrl;
-            await replaceBackgroundImage(imgurl, name, avatarUrl, dJson );
+            let avatarUrl = session.platform == 'qq'? `https://q.qlogo.cn/qqapp/${session.bot.config.id}/${session.event.user.id}/640` : session.author.avatar? session.author.avatar: config.avatarUrl;
+            await replaceBackgroundImage(imgurl, name, avatarUrl, dJson , lightcg);
+
             page = await ctx.puppeteer.page();
             await page.setViewport({ width: 1920 * 2, height: 1080 * 2 });
             await page.goto(`file:///${resolve(__dirname, "./index.html")}`);
-            await page.waitForSelector("#avatar");
+            await page.waitForSelector("#body");
             // await page.evaluate(`render(${JSON.stringify(jrysRender)})`);    // 某些人使用这个函数会渲染超时
             const element = await page.$("#body");
-            session.send (
-              h.image(await element.screenshot({
+            return h.image(await element.screenshot({
                 encoding: "binary"
               }), "image/png")
-            );
-            await page.close();
           } catch (err) {
-            console.log("[jryspro Debugger]>>\n"+err);
+            // console.log("[jryspro Debugger]>>\n"+err);
+            logger.error(err);
             return <>渲染失败，不知道发生了啥</>
+          } finally {
+            await page?.close();
           }
         }
         else {
@@ -303,7 +304,7 @@ function readFilenames(dirPath:any) {
 }
 
 // 异步函数来读取和写入文件
-async function replaceBackgroundImage(imgUrl: string, name:any, avatar:any, jrysJson: any) {
+async function replaceBackgroundImage(imgUrl: string, name:any, avatar:any, jrysJson: any, night:string) {
   return new Promise(async res => {
     try {
       // 读取 index.html 文件的内容
@@ -312,7 +313,7 @@ async function replaceBackgroundImage(imgUrl: string, name:any, avatar:any, jrys
       let signTxt = `${jrysJson.signText.split("，")[0]}，${jrysJson.signText.split("，")[1]}<br/>${jrysJson.signText.split("，")[2]}，${jrysJson.signText.split("，")[3]}`;
   
       // 替换字符串中的 ##backgroundImage## 为指定的图片 URL
-      const replacedContent = data.replace('##backgroundImage##', imgUrl).replace('##avatar##', avatar)
+      const replacedContent = data.replace('##backgroundImage##', imgUrl).replace('##avatar##', avatar).replace('##night##', night)
       .replace("##username##", name.length>12? name.substring(0,12):name).replace("##fortunate##", `${jrysJson.fortuneSummary.toString().length>8? jrysJson.fortuneSummary.toString().substring(0,8):jrysJson.fortuneSummary}&nbsp;&nbsp;${jrysJson.luckyStar}`)
       .replace("##signTxt##", signTxt);
   

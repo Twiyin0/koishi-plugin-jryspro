@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/koishi-plugin-jryspro?style=flat-square)](https://www.npmjs.com/package/koishi-plugin-jryspro)
 
-jrys plugin for bella and it is depended API
+jrys plugin for bella
 ## 注意
 * 更新前请看[更新日志](https://raw.githubusercontent.com/Twiyin0/koishi-plugin-jryspro/main/CHANGELOG.md)，也许有些版本你并不需要更新  
 * 如果需要将v1.2.x更新到v1.3.x请先停止本插件再更新，以免koishi炸掉  
