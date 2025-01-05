@@ -45,6 +45,7 @@ jrys plugin for bella
 # CHANGELOG
 
 [更新日志](https://raw.githubusercontent.com/Twiyin0/koishi-plugin-jryspro/main/CHANGELOG.md)
+* 注：`v2.1.11` 版本有新增配置项
 
 ## api说明
 * api url以 #e# 结尾可以在末尾添加更新时间戳(例子后面等价的数字为当前时间戳)  

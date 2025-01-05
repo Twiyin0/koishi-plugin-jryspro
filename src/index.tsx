@@ -41,6 +41,7 @@ export interface Config {
   nightStart: number,
   nightEnd: number,
   imgApi: string,
+  imgQuality: number,
   waiting: boolean,
   callme: boolean,
   defaultMode: number,
@@ -59,6 +60,8 @@ export const schema = Schema.object({
   .description('自动夜间模式关闭时间整点(24时制),结束时间要小于开始时间[早上]'),
   imgApi: Schema.string().role('link').required()
   .description('[必填]渲染模式美图的api或文件夹(推荐纯竖屏),仅支持返回图片的api,不要忘记http(s)://'),
+  imgQuality: Schema.percent().default(0.4)
+  .description("渲染图输出质量"),
   waiting: Schema.boolean().default(true)
   .description('是否开启发送消息等待提示'),
   callme: Schema.boolean().default(false)
@@ -197,14 +200,16 @@ export function apply(ctx: Context, config: Config) {
             // await page.evaluate(`render(${JSON.stringify(jrysRender)})`);    // 某些人使用这个函数会渲染超时
             const element = await page.$("#body");
             return h.image(await element.screenshot({
-                encoding: "binary"
-              }), "image/png")
+                type: "jpeg",
+                encoding: "binary",
+                quality: config.imgQuality*100%101
+              }), "image/jpeg")
           } catch (err) {
             // console.log("[jryspro Debugger]>>\n"+err);
             logger.error(err);
             return <>渲染失败，不知道发生了啥</>
           } finally {
-            await page?.close();
+            if (page) await page?.close();
           }
         }
         else {
