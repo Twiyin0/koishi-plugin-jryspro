@@ -199,11 +199,13 @@ export function apply(ctx: Context, config: Config) {
             await page.waitForSelector("#body");
             // await page.evaluate(`render(${JSON.stringify(jrysRender)})`);    // 某些人使用这个函数会渲染超时
             const element = await page.$("#body");
-            return h.image(await element.screenshot({
-                type: "jpeg",
-                encoding: "binary",
-                quality: config.imgQuality*100%101
-              }), "image/jpeg")
+            return h.image(await element.screenshot(config.imgQuality===1? {
+              encoding: "binary",
+            }:{
+              type: "jpeg",
+              encoding: "binary",
+              quality: (config.imgQuality*100)%101
+            }), "image/png")
           } catch (err) {
             // console.log("[jryspro Debugger]>>\n"+err);
             logger.error(err);
